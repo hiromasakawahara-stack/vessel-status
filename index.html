@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>本船動静</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Yu Gothic UI', 'Meiryo', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header h1 { font-size: 1.4rem; }
+    .header .date { font-size: 0.9rem; opacity: 0.8; }
+    .controls {
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .controls input, .controls select {
+      padding: 0.5rem 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .controls input { width: 250px; }
+    .controls label { font-size: 0.85rem; color: #555; }
+    .summary {
+      padding: 0 2rem 0.5rem;
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .table-wrapper {
+      padding: 0 2rem 2rem;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      font-size: 0.85rem;
+    }
+    thead th {
+      background: #16213e;
+      color: white;
+      padding: 0.7rem 0.6rem;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { background: #1a3a6e; }
+    thead th .sort-icon { margin-left: 4px; font-size: 0.7rem; }
+    tbody tr { border-bottom: 1px solid #eee; }
+    tbody tr:hover { background: #f5f8ff; }
+    tbody td {
+      padding: 0.6rem;
+      vertical-align: top;
+    }
+    .vessel-name {
+      font-weight: 600;
+      color: #0f3460;
+    }
+    .port { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .port-osaka { background: #e3f2fd; color: #1565c0; }
+    .port-kobe { background: #fce4ec; color: #c62828; }
+    .port-other { background: #f3e5f5; color: #6a1b9a; }
+    .flag-delayed {
+      background: #fff3e0;
+      color: #e65100;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .flag-ok {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .date-cell { white-space: nowrap; }
+    .date-changed { color: #e65100; font-weight: 600; }
+    .link-cell a {
+      color: #1976d2;
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+    .link-cell a:hover { text-decoration: underline; }
+    .remarks { color: #666; font-size: 0.8rem; max-width: 200px; }
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #999;
+    }
+    @media (max-width: 768px) {
+      .header { padding: 0.8rem 1rem; }
+      .controls { padding: 0.5rem 1rem; }
+      .table-wrapper { padding: 0 0.5rem 1rem; }
+      .controls input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🚢 本船動静</h1>
+    <div class="date" id="currentDate"></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchBox" placeholder="船名・揚げ地・備考で検索...">
+    <select id="portFilter">
+      <option value="">全揚げ地</option>
+    </select>
+    <label>
+      <input type="checkbox" id="showDelayedOnly"> 遅延ありのみ
+    </label>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th data-col="source">確認先 <span class="sort-icon"></span></th>
+          <th data-col="vessel">船名 <span class="sort-icon"></span></th>
+          <th data-col="voy">VOY <span class="sort-icon"></span></th>
+          <th data-col="port">揚げ地 <span class="sort-icon"></span></th>
+          <th data-col="origin">積み地 <span class="sort-icon"></span></th>
+          <th data-col="checkDate">確認日 <span class="sort-icon"></span></th>
+          <th data-col="flag">フラグ <span class="sort-icon"></span></th>
+          <th data-col="arrival">入港日 <span class="sort-icon"></span></th>
+          <th data-col="originalArrival">書類入手時入港日 <span class="sort-icon"></span></th>
+          <th data-col="delayReason">遅延理由 <span class="sort-icon"></span></th>
+          <th data-col="eta">ETA <span class="sort-icon"></span></th>
+          <th data-col="si">S/I <span class="sort-icon"></span></th>
+          <th data-col="inv">INV <span class="sort-icon"></span></th>
+          <th data-col="remarks">備考 <span class="sort-icon"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // --- データ ---
+    const vesselData = [
+      {
+        source: "ONE Vessel Schedule",
+        sourceUrl: "https://vessel-schedule-service.com/one/vessel-schedule?tab=2&voyage_detail_id=40652027",
+        vessel: "SAMAL",
+        voy: "2611N",
+        port: "OSAKA",
+        origin: "",
+        checkDate: "2026-04-10",
+        flag: "",
+        arrival: "2026-04-13",
+        originalArrival: "2026-04-09",
+        delayReason: "",
+        eta: "",
+        si: "",
+        inv: "",
+        remarks: "和信工業, オーシャントレンズ"
+      },
+      {
+        source: "COSCO Vessel Schedule",
+        sourceUrl: "",
+        vessel: "COSCO KIKU",
+        voy: "220E",
+        port: "OSAKA",
+        origin: "",
+        checkDate: "2026-04-06",
+        flag: "",
+        arrival: "",
+        originalArrival: "",
+        delayReason: "",
+        eta: "",
+        si: "",
+        inv: "",
+        remarks: ""
+      },
+      {
+        source: "",
+        sourceUrl: "",
+        vessel: "JULIE",
+        voy: "HG615A",
+        port: "KOBE",
+        origin: "",
+        checkDate: "",
+        flag: "",
+        arrival: "",
+        originalArrival: "",
+        delayReason: "",
+        eta: "",
+        si: "",
+        inv: "",
+        remarks: ""
+      },
+      {
+        source: "TOYOSHINGO / WANHAI",
+        sourceUrl: "https://www.toyoshingo.com/wanhai/certificate.php?portcode=40&id=10177739",
+        vessel: "WAN HAI 288",
+        voy: "N106",
+        port: "OSAKA",
+        origin: "",
+        checkDate: "",
+        flag: "",
+        arrival: "",
+        originalArrival: "",
+        delayReason: "",
+        eta: "",
+        si: "",
+        inv: "",
+        remarks: "三景"
+      },
+      {
+        source: "JINJIANG SHIPPING",
+        sourceUrl: "https://jinjiangshipping.jp/vmi/daily.php",
+        vessel: "MILD SONATA",
+        voy: "2615E",
+        port: "OSAKA",
+        origin: "",
+        checkDate: "",
+        flag: "",
+        arrival: "",
+        originalArrival: "",
+        delayReason: "",
+        eta: "",
+        si: "",
+        inv: "",
+        remarks: ""
+      }
+    ];
+
+    // --- 日付表示 ---
+    document.getElementById('currentDate').textContent =
+      new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
+
+    // --- ポートフィルター初期化 ---
+    const ports = [...new Set(vesselData.map(d => d.port).filter(p => p))];
+    const portFilter = document.getElementById('portFilter');
+    ports.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p;
+      portFilter.appendChild(opt);
+    });
+
+    // --- 描画 ---
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      return `${d.getMonth()+1}/${d.getDate()}`;
+    }
+
+    function portClass(port) {
+      if (!port) return '';
+      const p = port.toUpperCase();
+      if (p === 'OSAKA') return 'port-osaka';
+      if (p === 'KOBE') return 'port-kobe';
+      return 'port-other';
+    }
+
+    function isDelayed(row) {
+      if (!row.arrival || !row.originalArrival) return false;
+      return new Date(row.arrival) > new Date(row.originalArrival);
+    }
+
+    let sortCol = null;
+    let sortAsc = true;
+
+    function render() {
+      const search = document.getElementById('searchBox').value.toLowerCase();
+      const portVal = portFilter.value;
+      const delayedOnly = document.getElementById('showDelayedOnly').checked;
+
+      let data = vesselData.filter(row => {
+        if (search && !(
+          row.vessel.toLowerCase().includes(search) ||
+          row.port.toLowerCase().includes(search) ||
+          row.remarks.toLowerCase().includes(search) ||
+          row.voy.toLowerCase().includes(search)
+        )) return false;
+        if (portVal && row.port !== portVal) return false;
+        if (delayedOnly && !isDelayed(row)) return false;
+        return true;
+      });
+
+      if (sortCol) {
+        data.sort((a, b) => {
+          let va = a[sortCol] || '';
+          let vb = b[sortCol] || '';
+          if (va < vb) return sortAsc ? -1 : 1;
+          if (va > vb) return sortAsc ? 1 : -1;
+          return 0;
+        });
+      }
+
+      const tbody = document.getElementById('tableBody');
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="14" class="empty-state">該当データなし</td></tr>';
+        document.getElementById('summary').textContent = '';
+        return;
+      }
+
+      document.getElementById('summary').textContent =
+        `${data.length}件表示 / 全${vesselData.length}件`;
+
+      tbody.innerHTML = data.map(row => {
+        const delayed = isDelayed(row);
+        const arrivalChanged = row.arrival && row.originalArrival && row.arrival !== row.originalArrival;
+        return `<tr>
+          <td class="link-cell">${row.sourceUrl
+            ? `<a href="${row.sourceUrl}" target="_blank" rel="noopener">${row.source || '確認'}</a>`
+            : (row.source || '')}</td>
+          <td class="vessel-name">${row.vessel}</td>
+          <td>${row.voy}</td>
+          <td><span class="port ${portClass(row.port)}">${row.port}</span></td>
+          <td>${row.origin}</td>
+          <td class="date-cell">${formatDate(row.checkDate)}</td>
+          <td>${delayed
+            ? '<span class="flag-delayed">遅延</span>'
+            : (row.arrival ? '<span class="flag-ok">予定通り</span>' : '')}</td>
+          <td class="date-cell ${arrivalChanged ? 'date-changed' : ''}">${formatDate(row.arrival)}</td>
+          <td class="date-cell">${formatDate(row.originalArrival)}</td>
+          <td>${row.delayReason}</td>
+          <td class="date-cell">${formatDate(row.eta)}</td>
+          <td>${row.si}</td>
+          <td>${row.inv}</td>
+          <td class="remarks">${row.remarks}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // --- イベント ---
+    document.getElementById('searchBox').addEventListener('input', render);
+    portFilter.addEventListener('change', render);
+    document.getElementById('showDelayedOnly').addEventListener('change', render);
+
+    document.querySelectorAll('thead th').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) {
+          sortAsc = !sortAsc;
+        } else {
+          sortCol = col;
+          sortAsc = true;
+        }
+        document.querySelectorAll('thead th .sort-icon').forEach(s => s.textContent = '');
+        th.querySelector('.sort-icon').textContent = sortAsc ? '▲' : '▼';
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>
