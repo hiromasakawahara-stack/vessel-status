@@ -11,6 +11,7 @@
       background: #f0f2f5;
       color: #1a1a2e;
     }
+    /* --- Header --- */
     .header {
       background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
       color: white;
@@ -22,26 +23,45 @@
     }
     .header h1 { font-size: 1.4rem; }
     .header .date { font-size: 0.9rem; opacity: 0.8; }
+    /* --- Controls --- */
     .controls {
       padding: 1rem 2rem;
       display: flex;
-      gap: 1rem;
+      gap: 0.8rem;
       align-items: center;
       flex-wrap: wrap;
     }
-    .controls input, .controls select {
+    .controls input[type="text"], .controls select {
       padding: 0.5rem 0.8rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 0.9rem;
     }
-    .controls input { width: 250px; }
-    .controls label { font-size: 0.85rem; color: #555; }
+    .controls input[type="text"] { width: 220px; }
+    .controls label { font-size: 0.85rem; color: #555; cursor: pointer; }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-primary { background: #1976d2; color: white; }
+    .btn-primary:hover { background: #1565c0; }
+    .btn-secondary { background: #e0e0e0; color: #333; }
+    .btn-secondary:hover { background: #ccc; }
+    .btn-danger { background: #e53935; color: white; }
+    .btn-danger:hover { background: #c62828; }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+    .btn-group { margin-left: auto; display: flex; gap: 0.5rem; }
     .summary {
       padding: 0 2rem 0.5rem;
       font-size: 0.85rem;
       color: #666;
     }
+    /* --- Table --- */
     .table-wrapper {
       padding: 0 2rem 2rem;
       overflow-x: auto;
@@ -58,7 +78,7 @@
     thead th {
       background: #16213e;
       color: white;
-      padding: 0.7rem 0.6rem;
+      padding: 0.7rem 0.5rem;
       text-align: left;
       position: sticky;
       top: 0;
@@ -68,312 +88,515 @@
     }
     thead th:hover { background: #1a3a6e; }
     thead th .sort-icon { margin-left: 4px; font-size: 0.7rem; }
+    thead th:last-child { cursor: default; }
+    thead th:last-child:hover { background: #16213e; }
     tbody tr { border-bottom: 1px solid #eee; }
     tbody tr:hover { background: #f5f8ff; }
-    tbody td {
-      padding: 0.6rem;
-      vertical-align: top;
-    }
-    .vessel-name {
-      font-weight: 600;
-      color: #0f3460;
-    }
+    tbody td { padding: 0.5rem; vertical-align: top; }
+    .vessel-name { font-weight: 600; color: #0f3460; }
     .port { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
     .port-osaka { background: #e3f2fd; color: #1565c0; }
     .port-kobe { background: #fce4ec; color: #c62828; }
     .port-other { background: #f3e5f5; color: #6a1b9a; }
-    .flag-delayed {
-      background: #fff3e0;
-      color: #e65100;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .flag-ok {
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    }
+    .flag-delayed { background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .flag-ok { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
     .date-cell { white-space: nowrap; }
     .date-changed { color: #e65100; font-weight: 600; }
-    .link-cell a {
-      color: #1976d2;
-      text-decoration: none;
-      font-size: 0.8rem;
-    }
+    .link-cell a { color: #1976d2; text-decoration: none; font-size: 0.8rem; }
     .link-cell a:hover { text-decoration: underline; }
-    .remarks { color: #666; font-size: 0.8rem; max-width: 200px; }
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: #999;
+    .remarks { color: #666; font-size: 0.8rem; max-width: 180px; }
+    .actions { white-space: nowrap; display: flex; gap: 4px; }
+    .empty-state { text-align: center; padding: 3rem; color: #999; }
+    /* --- Modal --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 5vh;
+      overflow-y: auto;
     }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      margin-bottom: 2rem;
+    }
+    .modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 { font-size: 1.1rem; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+    .modal-body { padding: 1.5rem; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    .form-group label .required { color: #e53935; }
+    .form-group input, .form-group textarea, .form-group select {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
+    }
+    .form-group textarea { resize: vertical; min-height: 60px; }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+    /* --- Import hidden --- */
+    #importFile { display: none; }
     @media (max-width: 768px) {
       .header { padding: 0.8rem 1rem; }
       .controls { padding: 0.5rem 1rem; }
       .table-wrapper { padding: 0 0.5rem 1rem; }
-      .controls input { width: 100%; }
+      .controls input[type="text"] { width: 100%; }
+      .form-grid { grid-template-columns: 1fr; }
+      .btn-group { margin-left: 0; width: 100%; justify-content: flex-end; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🚢 本船動静</h1>
-    <div class="date" id="currentDate"></div>
+
+<div class="header">
+  <h1>🚢 本船動静</h1>
+  <div class="date" id="currentDate"></div>
+</div>
+
+<div class="controls">
+  <input type="text" id="searchBox" placeholder="船名・揚げ地・備考で検索...">
+  <select id="portFilter"><option value="">全揚げ地</option></select>
+  <label><input type="checkbox" id="showDelayedOnly"> 遅延のみ</label>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="openModal()">＋ 新規追加</button>
+    <button class="btn btn-secondary" onclick="exportData()">JSON出力</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">JSON取込</button>
+    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
   </div>
+</div>
 
-  <div class="controls">
-    <input type="text" id="searchBox" placeholder="船名・揚げ地・備考で検索...">
-    <select id="portFilter">
-      <option value="">全揚げ地</option>
-    </select>
-    <label>
-      <input type="checkbox" id="showDelayedOnly"> 遅延ありのみ
-    </label>
+<div class="summary" id="summary"></div>
+
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th data-col="source">確認先<span class="sort-icon"></span></th>
+        <th data-col="vessel">船名<span class="sort-icon"></span></th>
+        <th data-col="voy">VOY<span class="sort-icon"></span></th>
+        <th data-col="port">揚げ地<span class="sort-icon"></span></th>
+        <th data-col="origin">積み地<span class="sort-icon"></span></th>
+        <th data-col="checkDate">確認日<span class="sort-icon"></span></th>
+        <th data-col="flag">フラグ<span class="sort-icon"></span></th>
+        <th data-col="arrival">入港日<span class="sort-icon"></span></th>
+        <th data-col="originalArrival">書類時入港日<span class="sort-icon"></span></th>
+        <th data-col="delayReason">遅延理由<span class="sort-icon"></span></th>
+        <th data-col="eta">ETA<span class="sort-icon"></span></th>
+        <th data-col="si">S/I<span class="sort-icon"></span></th>
+        <th data-col="inv">INV<span class="sort-icon"></span></th>
+        <th data-col="remarks">備考<span class="sort-icon"></span></th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">新規追加</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>船名 <span class="required">*</span></label>
+          <input type="text" id="f_vessel" placeholder="SAMAL">
+        </div>
+        <div class="form-group">
+          <label>VOY</label>
+          <input type="text" id="f_voy" placeholder="2611N">
+        </div>
+        <div class="form-group">
+          <label>揚げ地</label>
+          <input type="text" id="f_port" placeholder="OSAKA" list="portList">
+          <datalist id="portList">
+            <option value="OSAKA">
+            <option value="KOBE">
+            <option value="TOKYO">
+            <option value="NAGOYA">
+            <option value="YOKOHAMA">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>積み地</label>
+          <input type="text" id="f_origin" placeholder="SHANGHAI">
+        </div>
+        <div class="form-group">
+          <label>確認日</label>
+          <input type="date" id="f_checkDate">
+        </div>
+        <div class="form-group">
+          <label>入港日</label>
+          <input type="date" id="f_arrival">
+        </div>
+        <div class="form-group">
+          <label>書類入手時 入港日</label>
+          <input type="date" id="f_originalArrival">
+        </div>
+        <div class="form-group">
+          <label>ETA</label>
+          <input type="date" id="f_eta">
+        </div>
+        <div class="form-group">
+          <label>遅延理由</label>
+          <input type="text" id="f_delayReason" placeholder="">
+        </div>
+        <div class="form-group">
+          <label>確認先（表示名）</label>
+          <input type="text" id="f_source" placeholder="ONE Vessel Schedule">
+        </div>
+        <div class="form-group full">
+          <label>確認先URL</label>
+          <input type="url" id="f_sourceUrl" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>S/I</label>
+          <input type="text" id="f_si">
+        </div>
+        <div class="form-group">
+          <label>INV</label>
+          <input type="text" id="f_inv">
+        </div>
+        <div class="form-group full">
+          <label>備考</label>
+          <textarea id="f_remarks" placeholder="荷主名など"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">追加</button>
+    </div>
   </div>
+</div>
 
-  <div class="summary" id="summary"></div>
+<script>
+// ===== データ管理 =====
+const STORAGE_KEY = 'vesselData';
 
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th data-col="source">確認先 <span class="sort-icon"></span></th>
-          <th data-col="vessel">船名 <span class="sort-icon"></span></th>
-          <th data-col="voy">VOY <span class="sort-icon"></span></th>
-          <th data-col="port">揚げ地 <span class="sort-icon"></span></th>
-          <th data-col="origin">積み地 <span class="sort-icon"></span></th>
-          <th data-col="checkDate">確認日 <span class="sort-icon"></span></th>
-          <th data-col="flag">フラグ <span class="sort-icon"></span></th>
-          <th data-col="arrival">入港日 <span class="sort-icon"></span></th>
-          <th data-col="originalArrival">書類入手時入港日 <span class="sort-icon"></span></th>
-          <th data-col="delayReason">遅延理由 <span class="sort-icon"></span></th>
-          <th data-col="eta">ETA <span class="sort-icon"></span></th>
-          <th data-col="si">S/I <span class="sort-icon"></span></th>
-          <th data-col="inv">INV <span class="sort-icon"></span></th>
-          <th data-col="remarks">備考 <span class="sort-icon"></span></th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-      </tbody>
-    </table>
-  </div>
+const defaultData = [
+  { id:1, source:"ONE Vessel Schedule", sourceUrl:"https://vessel-schedule-service.com/one/vessel-schedule?tab=2&voyage_detail_id=40652027", vessel:"SAMAL", voy:"2611N", port:"OSAKA", origin:"", checkDate:"2026-04-10", arrival:"2026-04-13", originalArrival:"2026-04-09", delayReason:"", eta:"", si:"", inv:"", remarks:"和信工業, オーシャントレンズ" },
+  { id:2, source:"COSCO Vessel Schedule", sourceUrl:"", vessel:"COSCO KIKU", voy:"220E", port:"OSAKA", origin:"", checkDate:"2026-04-06", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"" },
+  { id:3, source:"", sourceUrl:"", vessel:"JULIE", voy:"HG615A", port:"KOBE", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"" },
+  { id:4, source:"TOYOSHINGO / WANHAI", sourceUrl:"https://www.toyoshingo.com/wanhai/certificate.php?portcode=40&id=10177739", vessel:"WAN HAI 288", voy:"N106", port:"OSAKA", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"三景" },
+  { id:5, source:"JINJIANG SHIPPING", sourceUrl:"https://jinjiangshipping.jp/vmi/daily.php", vessel:"MILD SONATA", voy:"2615E", port:"OSAKA", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"" }
+];
 
-  <script>
-    // --- データ ---
-    const vesselData = [
-      {
-        source: "ONE Vessel Schedule",
-        sourceUrl: "https://vessel-schedule-service.com/one/vessel-schedule?tab=2&voyage_detail_id=40652027",
-        vessel: "SAMAL",
-        voy: "2611N",
-        port: "OSAKA",
-        origin: "",
-        checkDate: "2026-04-10",
-        flag: "",
-        arrival: "2026-04-13",
-        originalArrival: "2026-04-09",
-        delayReason: "",
-        eta: "",
-        si: "",
-        inv: "",
-        remarks: "和信工業, オーシャントレンズ"
-      },
-      {
-        source: "COSCO Vessel Schedule",
-        sourceUrl: "",
-        vessel: "COSCO KIKU",
-        voy: "220E",
-        port: "OSAKA",
-        origin: "",
-        checkDate: "2026-04-06",
-        flag: "",
-        arrival: "",
-        originalArrival: "",
-        delayReason: "",
-        eta: "",
-        si: "",
-        inv: "",
-        remarks: ""
-      },
-      {
-        source: "",
-        sourceUrl: "",
-        vessel: "JULIE",
-        voy: "HG615A",
-        port: "KOBE",
-        origin: "",
-        checkDate: "",
-        flag: "",
-        arrival: "",
-        originalArrival: "",
-        delayReason: "",
-        eta: "",
-        si: "",
-        inv: "",
-        remarks: ""
-      },
-      {
-        source: "TOYOSHINGO / WANHAI",
-        sourceUrl: "https://www.toyoshingo.com/wanhai/certificate.php?portcode=40&id=10177739",
-        vessel: "WAN HAI 288",
-        voy: "N106",
-        port: "OSAKA",
-        origin: "",
-        checkDate: "",
-        flag: "",
-        arrival: "",
-        originalArrival: "",
-        delayReason: "",
-        eta: "",
-        si: "",
-        inv: "",
-        remarks: "三景"
-      },
-      {
-        source: "JINJIANG SHIPPING",
-        sourceUrl: "https://jinjiangshipping.jp/vmi/daily.php",
-        vessel: "MILD SONATA",
-        voy: "2615E",
-        port: "OSAKA",
-        origin: "",
-        checkDate: "",
-        flag: "",
-        arrival: "",
-        originalArrival: "",
-        delayReason: "",
-        eta: "",
-        si: "",
-        inv: "",
-        remarks: ""
-      }
-    ];
+let vesselData = [];
+let nextId = 1;
+let editingId = null;
 
-    // --- 日付表示 ---
-    document.getElementById('currentDate').textContent =
-      new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
+function loadData() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      vesselData = JSON.parse(saved);
+    } catch { vesselData = [...defaultData]; }
+  } else {
+    vesselData = [...defaultData];
+  }
+  nextId = vesselData.length > 0 ? Math.max(...vesselData.map(d => d.id || 0)) + 1 : 1;
+}
 
-    // --- ポートフィルター初期化 ---
-    const ports = [...new Set(vesselData.map(d => d.port).filter(p => p))];
-    const portFilter = document.getElementById('portFilter');
-    ports.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      portFilter.appendChild(opt);
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(vesselData));
+}
+
+// ===== UI =====
+document.getElementById('currentDate').textContent =
+  new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+
+function refreshPortFilter() {
+  const portFilter = document.getElementById('portFilter');
+  const current = portFilter.value;
+  const ports = [...new Set(vesselData.map(d => d.port).filter(p => p))].sort();
+  portFilter.innerHTML = '<option value="">全揚げ地</option>';
+  ports.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p; opt.textContent = p;
+    if (p === current) opt.selected = true;
+    portFilter.appendChild(opt);
+  });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function portClass(port) {
+  if (!port) return '';
+  const p = port.toUpperCase();
+  if (p === 'OSAKA') return 'port-osaka';
+  if (p === 'KOBE') return 'port-kobe';
+  return 'port-other';
+}
+
+function isDelayed(row) {
+  if (!row.arrival || !row.originalArrival) return false;
+  return new Date(row.arrival) > new Date(row.originalArrival);
+}
+
+let sortCol = null;
+let sortAsc = true;
+
+function render() {
+  const search = document.getElementById('searchBox').value.toLowerCase();
+  const portVal = document.getElementById('portFilter').value;
+  const delayedOnly = document.getElementById('showDelayedOnly').checked;
+
+  let data = vesselData.filter(row => {
+    if (search && !(
+      (row.vessel||'').toLowerCase().includes(search) ||
+      (row.port||'').toLowerCase().includes(search) ||
+      (row.remarks||'').toLowerCase().includes(search) ||
+      (row.voy||'').toLowerCase().includes(search) ||
+      (row.source||'').toLowerCase().includes(search)
+    )) return false;
+    if (portVal && row.port !== portVal) return false;
+    if (delayedOnly && !isDelayed(row)) return false;
+    return true;
+  });
+
+  if (sortCol) {
+    data.sort((a, b) => {
+      let va = a[sortCol] || '';
+      let vb = b[sortCol] || '';
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ? 1 : -1;
+      return 0;
     });
+  }
 
-    // --- 描画 ---
-    function formatDate(dateStr) {
-      if (!dateStr) return '';
-      const d = new Date(dateStr);
-      if (isNaN(d)) return dateStr;
-      return `${d.getMonth()+1}/${d.getDate()}`;
+  const tbody = document.getElementById('tableBody');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">該当データなし</td></tr>';
+    document.getElementById('summary').textContent = '';
+    return;
+  }
+
+  document.getElementById('summary').textContent = `${data.length}件表示 / 全${vesselData.length}件`;
+
+  tbody.innerHTML = data.map(row => {
+    const delayed = isDelayed(row);
+    const arrivalChanged = row.arrival && row.originalArrival && row.arrival !== row.originalArrival;
+    return `<tr>
+      <td class="link-cell">${row.sourceUrl
+        ? `<a href="${row.sourceUrl}" target="_blank" rel="noopener">${row.source || '確認'}</a>`
+        : escHtml(row.source || '')}</td>
+      <td class="vessel-name">${escHtml(row.vessel)}</td>
+      <td>${escHtml(row.voy)}</td>
+      <td><span class="port ${portClass(row.port)}">${escHtml(row.port)}</span></td>
+      <td>${escHtml(row.origin||'')}</td>
+      <td class="date-cell">${formatDate(row.checkDate)}</td>
+      <td>${delayed
+        ? '<span class="flag-delayed">遅延</span>'
+        : (row.arrival ? '<span class="flag-ok">予定通り</span>' : '')}</td>
+      <td class="date-cell ${arrivalChanged ? 'date-changed' : ''}">${formatDate(row.arrival)}</td>
+      <td class="date-cell">${formatDate(row.originalArrival)}</td>
+      <td>${escHtml(row.delayReason||'')}</td>
+      <td class="date-cell">${formatDate(row.eta)}</td>
+      <td>${escHtml(row.si||'')}</td>
+      <td>${escHtml(row.inv||'')}</td>
+      <td class="remarks">${escHtml(row.remarks||'')}</td>
+      <td class="actions">
+        <button class="btn btn-secondary btn-sm" onclick="editRecord(${row.id})">編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecord(${row.id})">削除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ===== Modal =====
+const fields = ['vessel','voy','port','origin','checkDate','arrival','originalArrival','eta','delayReason','source','sourceUrl','si','inv','remarks'];
+
+function openModal(data) {
+  editingId = data ? data.id : null;
+  document.getElementById('modalTitle').textContent = data ? '編集' : '新規追加';
+  document.getElementById('saveBtn').textContent = data ? '更新' : '追加';
+
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (!el) return;
+    if (el.tagName === 'TEXTAREA') {
+      el.value = data ? (data[f] || '') : '';
+    } else {
+      el.value = data ? (data[f] || '') : '';
     }
+  });
 
-    function portClass(port) {
-      if (!port) return '';
-      const p = port.toUpperCase();
-      if (p === 'OSAKA') return 'port-osaka';
-      if (p === 'KOBE') return 'port-kobe';
-      return 'port-other';
+  // 新規時は確認日を今日にデフォルト
+  if (!data) {
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('f_checkDate').value = today;
+  }
+
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('f_vessel').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  editingId = null;
+}
+
+function saveRecord() {
+  const vessel = document.getElementById('f_vessel').value.trim();
+  if (!vessel) {
+    alert('船名は必須です');
+    document.getElementById('f_vessel').focus();
+    return;
+  }
+
+  const record = {};
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    record[f] = el ? el.value.trim() : '';
+  });
+
+  if (editingId !== null) {
+    const idx = vesselData.findIndex(d => d.id === editingId);
+    if (idx >= 0) {
+      record.id = editingId;
+      vesselData[idx] = record;
     }
+  } else {
+    record.id = nextId++;
+    vesselData.push(record);
+  }
 
-    function isDelayed(row) {
-      if (!row.arrival || !row.originalArrival) return false;
-      return new Date(row.arrival) > new Date(row.originalArrival);
+  saveData();
+  refreshPortFilter();
+  render();
+  closeModal();
+}
+
+function editRecord(id) {
+  const row = vesselData.find(d => d.id === id);
+  if (row) openModal(row);
+}
+
+function deleteRecord(id) {
+  const row = vesselData.find(d => d.id === id);
+  if (!row) return;
+  if (!confirm(`「${row.vessel} ${row.voy}」を削除しますか？`)) return;
+  vesselData = vesselData.filter(d => d.id !== id);
+  saveData();
+  refreshPortFilter();
+  render();
+}
+
+// ===== Export / Import =====
+function exportData() {
+  const blob = new Blob([JSON.stringify(vesselData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vessel-status_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error('invalid');
+      if (!confirm(`${imported.length}件のデータを取り込みます。現在のデータは上書きされます。よろしいですか？`)) return;
+      vesselData = imported.map((d, i) => ({ ...d, id: d.id || i + 1 }));
+      nextId = Math.max(...vesselData.map(d => d.id)) + 1;
+      saveData();
+      refreshPortFilter();
+      render();
+    } catch {
+      alert('JSONファイルの読み込みに失敗しました');
     }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
 
-    let sortCol = null;
-    let sortAsc = true;
-
-    function render() {
-      const search = document.getElementById('searchBox').value.toLowerCase();
-      const portVal = portFilter.value;
-      const delayedOnly = document.getElementById('showDelayedOnly').checked;
-
-      let data = vesselData.filter(row => {
-        if (search && !(
-          row.vessel.toLowerCase().includes(search) ||
-          row.port.toLowerCase().includes(search) ||
-          row.remarks.toLowerCase().includes(search) ||
-          row.voy.toLowerCase().includes(search)
-        )) return false;
-        if (portVal && row.port !== portVal) return false;
-        if (delayedOnly && !isDelayed(row)) return false;
-        return true;
-      });
-
-      if (sortCol) {
-        data.sort((a, b) => {
-          let va = a[sortCol] || '';
-          let vb = b[sortCol] || '';
-          if (va < vb) return sortAsc ? -1 : 1;
-          if (va > vb) return sortAsc ? 1 : -1;
-          return 0;
-        });
-      }
-
-      const tbody = document.getElementById('tableBody');
-      if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="14" class="empty-state">該当データなし</td></tr>';
-        document.getElementById('summary').textContent = '';
-        return;
-      }
-
-      document.getElementById('summary').textContent =
-        `${data.length}件表示 / 全${vesselData.length}件`;
-
-      tbody.innerHTML = data.map(row => {
-        const delayed = isDelayed(row);
-        const arrivalChanged = row.arrival && row.originalArrival && row.arrival !== row.originalArrival;
-        return `<tr>
-          <td class="link-cell">${row.sourceUrl
-            ? `<a href="${row.sourceUrl}" target="_blank" rel="noopener">${row.source || '確認'}</a>`
-            : (row.source || '')}</td>
-          <td class="vessel-name">${row.vessel}</td>
-          <td>${row.voy}</td>
-          <td><span class="port ${portClass(row.port)}">${row.port}</span></td>
-          <td>${row.origin}</td>
-          <td class="date-cell">${formatDate(row.checkDate)}</td>
-          <td>${delayed
-            ? '<span class="flag-delayed">遅延</span>'
-            : (row.arrival ? '<span class="flag-ok">予定通り</span>' : '')}</td>
-          <td class="date-cell ${arrivalChanged ? 'date-changed' : ''}">${formatDate(row.arrival)}</td>
-          <td class="date-cell">${formatDate(row.originalArrival)}</td>
-          <td>${row.delayReason}</td>
-          <td class="date-cell">${formatDate(row.eta)}</td>
-          <td>${row.si}</td>
-          <td>${row.inv}</td>
-          <td class="remarks">${row.remarks}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    // --- イベント ---
-    document.getElementById('searchBox').addEventListener('input', render);
-    portFilter.addEventListener('change', render);
-    document.getElementById('showDelayedOnly').addEventListener('change', render);
-
-    document.querySelectorAll('thead th').forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.dataset.col;
-        if (sortCol === col) {
-          sortAsc = !sortAsc;
-        } else {
-          sortCol = col;
-          sortAsc = true;
-        }
-        document.querySelectorAll('thead th .sort-icon').forEach(s => s.textContent = '');
-        th.querySelector('.sort-icon').textContent = sortAsc ? '▲' : '▼';
-        render();
-      });
-    });
-
+// ===== Sort =====
+document.querySelectorAll('thead th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = true; }
+    document.querySelectorAll('thead th .sort-icon').forEach(s => s.textContent = '');
+    th.querySelector('.sort-icon').textContent = sortAsc ? '▲' : '▼';
     render();
-  </script>
+  });
+});
+
+// ===== Keyboard =====
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ===== Events =====
+document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('portFilter').addEventListener('change', render);
+document.getElementById('showDelayedOnly').addEventListener('change', render);
+
+// ===== Init =====
+loadData();
+refreshPortFilter();
+render();
+</script>
 </body>
 </html>
