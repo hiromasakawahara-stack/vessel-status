@@ -11,7 +11,6 @@
       background: #f0f2f5;
       color: #1a1a2e;
     }
-    /* --- Header --- */
     .header {
       background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
       color: white;
@@ -23,7 +22,6 @@
     }
     .header h1 { font-size: 1.4rem; }
     .header .date { font-size: 0.9rem; opacity: 0.8; }
-    /* --- Controls --- */
     .controls {
       padding: 1rem 2rem;
       display: flex;
@@ -61,7 +59,6 @@
       font-size: 0.85rem;
       color: #666;
     }
-    /* --- Table --- */
     .table-wrapper {
       padding: 0 2rem 2rem;
       overflow-x: auto;
@@ -85,6 +82,7 @@
       white-space: nowrap;
       cursor: pointer;
       user-select: none;
+      z-index: 10;
     }
     thead th:hover { background: #1a3a6e; }
     thead th .sort-icon { margin-left: 4px; font-size: 0.7rem; }
@@ -92,7 +90,47 @@
     thead th:last-child:hover { background: #16213e; }
     tbody tr { border-bottom: 1px solid #eee; }
     tbody tr:hover { background: #f5f8ff; }
-    tbody td { padding: 0.5rem; vertical-align: top; }
+    tbody tr.new-row { background: #e8f5e9; }
+    tbody td {
+      padding: 0;
+      vertical-align: top;
+      position: relative;
+      min-height: 32px;
+    }
+    /* --- Editable cell --- */
+    td .cell-display {
+      padding: 0.5rem;
+      min-height: 32px;
+      cursor: text;
+      width: 100%;
+      display: block;
+    }
+    td .cell-display:hover {
+      background: #e3f2fd;
+      outline: 1px solid #90caf9;
+    }
+    td .cell-display.empty-hint {
+      color: #ccc;
+    }
+    td .cell-display.empty-hint:hover {
+      color: #aaa;
+    }
+    td .cell-input {
+      width: 100%;
+      padding: 0.4rem;
+      border: 2px solid #1976d2;
+      border-radius: 0;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: #fff;
+      outline: none;
+      min-height: 32px;
+      box-sizing: border-box;
+    }
+    td .cell-input:focus {
+      box-shadow: 0 0 0 2px rgba(25,118,210,0.3);
+    }
+    /* --- Special displays --- */
     .vessel-name { font-weight: 600; color: #0f3460; }
     .port { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
     .port-osaka { background: #e3f2fd; color: #1565c0; }
@@ -100,86 +138,27 @@
     .port-other { background: #f3e5f5; color: #6a1b9a; }
     .flag-delayed { background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
     .flag-ok { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
-    .date-cell { white-space: nowrap; }
     .date-changed { color: #e65100; font-weight: 600; }
     .link-cell a { color: #1976d2; text-decoration: none; font-size: 0.8rem; }
     .link-cell a:hover { text-decoration: underline; }
-    .remarks { color: #666; font-size: 0.8rem; max-width: 180px; }
-    .actions { white-space: nowrap; display: flex; gap: 4px; }
+    .remarks { color: #666; font-size: 0.8rem; }
+    .actions { white-space: nowrap; padding: 0.4rem !important; }
+    .actions .btn-sm { margin: 0 2px; }
     .empty-state { text-align: center; padding: 3rem; color: #999; }
-    /* --- Modal --- */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 5vh;
-      overflow-y: auto;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal {
-      background: white;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 700px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      margin-bottom: 2rem;
-    }
-    .modal-header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-header h2 { font-size: 1.1rem; }
-    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
-    .modal-body { padding: 1.5rem; }
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.8rem;
-    }
-    .form-group { display: flex; flex-direction: column; }
-    .form-group.full { grid-column: 1 / -1; }
-    .form-group label {
-      font-size: 0.8rem;
-      color: #555;
-      margin-bottom: 0.3rem;
-      font-weight: 600;
-    }
-    .form-group label .required { color: #e53935; }
-    .form-group input, .form-group textarea, .form-group select {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      font-family: inherit;
-    }
-    .form-group input:focus, .form-group textarea:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
-    }
-    .form-group textarea { resize: vertical; min-height: 60px; }
-    .modal-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid #eee;
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-    }
-    /* --- Import hidden --- */
     #importFile { display: none; }
+    /* --- Saved flash --- */
+    @keyframes savedFlash {
+      0% { background: #c8e6c9; }
+      100% { background: transparent; }
+    }
+    td.just-saved .cell-display {
+      animation: savedFlash 0.6s ease-out;
+    }
     @media (max-width: 768px) {
       .header { padding: 0.8rem 1rem; }
       .controls { padding: 0.5rem 1rem; }
       .table-wrapper { padding: 0 0.5rem 1rem; }
       .controls input[type="text"] { width: 100%; }
-      .form-grid { grid-template-columns: 1fr; }
       .btn-group { margin-left: 0; width: 100%; justify-content: flex-end; }
     }
   </style>
@@ -196,7 +175,7 @@
   <select id="portFilter"><option value="">全揚げ地</option></select>
   <label><input type="checkbox" id="showDelayedOnly"> 遅延のみ</label>
   <div class="btn-group">
-    <button class="btn btn-primary" onclick="openModal()">＋ 新規追加</button>
+    <button class="btn btn-primary" onclick="addNewRow()">＋ 行追加</button>
     <button class="btn btn-secondary" onclick="exportData()">JSON出力</button>
     <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">JSON取込</button>
     <input type="file" id="importFile" accept=".json" onchange="importData(event)">
@@ -215,7 +194,7 @@
         <th data-col="port">揚げ地<span class="sort-icon"></span></th>
         <th data-col="origin">積み地<span class="sort-icon"></span></th>
         <th data-col="checkDate">確認日<span class="sort-icon"></span></th>
-        <th data-col="flag">フラグ<span class="sort-icon"></span></th>
+        <th>フラグ</th>
         <th data-col="arrival">入港日<span class="sort-icon"></span></th>
         <th data-col="originalArrival">書類時入港日<span class="sort-icon"></span></th>
         <th data-col="delayReason">遅延理由<span class="sort-icon"></span></th>
@@ -230,90 +209,24 @@
   </table>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="modalTitle">新規追加</h2>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>船名 <span class="required">*</span></label>
-          <input type="text" id="f_vessel" placeholder="SAMAL">
-        </div>
-        <div class="form-group">
-          <label>VOY</label>
-          <input type="text" id="f_voy" placeholder="2611N">
-        </div>
-        <div class="form-group">
-          <label>揚げ地</label>
-          <input type="text" id="f_port" placeholder="OSAKA" list="portList">
-          <datalist id="portList">
-            <option value="OSAKA">
-            <option value="KOBE">
-            <option value="TOKYO">
-            <option value="NAGOYA">
-            <option value="YOKOHAMA">
-          </datalist>
-        </div>
-        <div class="form-group">
-          <label>積み地</label>
-          <input type="text" id="f_origin" placeholder="SHANGHAI">
-        </div>
-        <div class="form-group">
-          <label>確認日</label>
-          <input type="date" id="f_checkDate">
-        </div>
-        <div class="form-group">
-          <label>入港日</label>
-          <input type="date" id="f_arrival">
-        </div>
-        <div class="form-group">
-          <label>書類入手時 入港日</label>
-          <input type="date" id="f_originalArrival">
-        </div>
-        <div class="form-group">
-          <label>ETA</label>
-          <input type="date" id="f_eta">
-        </div>
-        <div class="form-group">
-          <label>遅延理由</label>
-          <input type="text" id="f_delayReason" placeholder="">
-        </div>
-        <div class="form-group">
-          <label>確認先（表示名）</label>
-          <input type="text" id="f_source" placeholder="ONE Vessel Schedule">
-        </div>
-        <div class="form-group full">
-          <label>確認先URL</label>
-          <input type="url" id="f_sourceUrl" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>S/I</label>
-          <input type="text" id="f_si">
-        </div>
-        <div class="form-group">
-          <label>INV</label>
-          <input type="text" id="f_inv">
-        </div>
-        <div class="form-group full">
-          <label>備考</label>
-          <textarea id="f_remarks" placeholder="荷主名など"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">追加</button>
-    </div>
-  </div>
-</div>
-
 <script>
-// ===== データ管理 =====
 const STORAGE_KEY = 'vesselData';
+const COLS = [
+  { key:'source',          label:'確認先',     type:'text' },
+  { key:'vessel',          label:'船名',       type:'text' },
+  { key:'voy',             label:'VOY',        type:'text' },
+  { key:'port',            label:'揚げ地',     type:'text' },
+  { key:'origin',          label:'積み地',     type:'text' },
+  { key:'checkDate',       label:'確認日',     type:'date' },
+  { key:'_flag',           label:'フラグ',     type:'computed' },
+  { key:'arrival',         label:'入港日',     type:'date' },
+  { key:'originalArrival', label:'書類時入港日', type:'date' },
+  { key:'delayReason',     label:'遅延理由',   type:'text' },
+  { key:'eta',             label:'ETA',        type:'date' },
+  { key:'si',              label:'S/I',        type:'text' },
+  { key:'inv',             label:'INV',        type:'text' },
+  { key:'remarks',         label:'備考',       type:'text' },
+];
 
 const defaultData = [
   { id:1, source:"ONE Vessel Schedule", sourceUrl:"https://vessel-schedule-service.com/one/vessel-schedule?tab=2&voyage_detail_id=40652027", vessel:"SAMAL", voy:"2611N", port:"OSAKA", origin:"", checkDate:"2026-04-10", arrival:"2026-04-13", originalArrival:"2026-04-09", delayReason:"", eta:"", si:"", inv:"", remarks:"和信工業, オーシャントレンズ" },
@@ -325,40 +238,25 @@ const defaultData = [
 
 let vesselData = [];
 let nextId = 1;
-let editingId = null;
+let activeCell = null; // { rowId, colKey }
 
 function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
-    try {
-      vesselData = JSON.parse(saved);
-    } catch { vesselData = [...defaultData]; }
+    try { vesselData = JSON.parse(saved); } catch { vesselData = [...defaultData]; }
   } else {
     vesselData = [...defaultData];
   }
   nextId = vesselData.length > 0 ? Math.max(...vesselData.map(d => d.id || 0)) + 1 : 1;
 }
 
-function saveData() {
+function saveDataStore() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(vesselData));
 }
 
-// ===== UI =====
+// ===== Helpers =====
 document.getElementById('currentDate').textContent =
   new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-
-function refreshPortFilter() {
-  const portFilter = document.getElementById('portFilter');
-  const current = portFilter.value;
-  const ports = [...new Set(vesselData.map(d => d.port).filter(p => p))].sort();
-  portFilter.innerHTML = '<option value="">全揚げ地</option>';
-  ports.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p; opt.textContent = p;
-    if (p === current) opt.selected = true;
-    portFilter.appendChild(opt);
-  });
-}
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -380,10 +278,208 @@ function isDelayed(row) {
   return new Date(row.arrival) > new Date(row.originalArrival);
 }
 
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function refreshPortFilter() {
+  const pf = document.getElementById('portFilter');
+  const cur = pf.value;
+  const ports = [...new Set(vesselData.map(d => d.port).filter(p => p))].sort();
+  pf.innerHTML = '<option value="">全揚げ地</option>';
+  ports.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    if (p === cur) o.selected = true;
+    pf.appendChild(o);
+  });
+}
+
+// ===== Cell display content =====
+function cellDisplayHTML(row, col) {
+  const val = row[col.key] || '';
+  if (col.key === '_flag') {
+    const delayed = isDelayed(row);
+    if (delayed) return '<span class="flag-delayed">遅延</span>';
+    if (row.arrival) return '<span class="flag-ok">予定通り</span>';
+    return '';
+  }
+  if (col.key === 'vessel') {
+    return val ? `<span class="vessel-name">${escHtml(val)}</span>` : '';
+  }
+  if (col.key === 'port') {
+    return val ? `<span class="port ${portClass(val)}">${escHtml(val)}</span>` : '';
+  }
+  if (col.key === 'source') {
+    if (row.sourceUrl) return `<a href="${escHtml(row.sourceUrl)}" target="_blank" rel="noopener">${escHtml(val || '確認')}</a>`;
+    return escHtml(val);
+  }
+  if (col.type === 'date') {
+    const formatted = formatDate(val);
+    if (col.key === 'arrival' && row.arrival && row.originalArrival && row.arrival !== row.originalArrival) {
+      return `<span class="date-changed">${formatted}</span>`;
+    }
+    return formatted;
+  }
+  return escHtml(val);
+}
+
+// ===== Inline edit =====
+function startEdit(td, rowId, col) {
+  if (col.type === 'computed') return;
+  if (activeCell && activeCell.rowId === rowId && activeCell.colKey === col.key) return;
+
+  // Commit any other active edit first
+  if (activeCell) commitEdit();
+
+  const row = vesselData.find(d => d.id === rowId);
+  if (!row) return;
+
+  activeCell = { rowId, colKey: col.key, td };
+  const val = row[col.key] || '';
+
+  let input;
+  if (col.type === 'date') {
+    input = document.createElement('input');
+    input.type = 'date';
+    input.className = 'cell-input';
+    input.value = val;
+  } else {
+    input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'cell-input';
+    input.value = val;
+    if (col.key === 'source') {
+      input.placeholder = '確認先名';
+    }
+  }
+
+  td.innerHTML = '';
+  td.appendChild(input);
+  input.focus();
+  if (input.type === 'text') input.select();
+
+  input.addEventListener('blur', () => commitEdit());
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+      // Move to next row, same column
+      moveToNextRow(rowId, col);
+    }
+    if (e.key === 'Escape') {
+      cancelEdit();
+    }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      commitEdit();
+      moveToNextCol(rowId, col, e.shiftKey);
+    }
+  });
+}
+
+function commitEdit() {
+  if (!activeCell) return;
+  const { rowId, colKey, td } = activeCell;
+  const input = td.querySelector('.cell-input');
+  if (!input) { activeCell = null; return; }
+
+  const row = vesselData.find(d => d.id === rowId);
+  if (!row) { activeCell = null; return; }
+
+  const newVal = input.value.trim();
+  const oldVal = row[colKey] || '';
+
+  row[colKey] = newVal;
+  activeCell = null;
+
+  // Re-render just this cell
+  const col = COLS.find(c => c.key === colKey);
+  renderCell(td, row, col);
+
+  if (newVal !== oldVal) {
+    saveDataStore();
+    // Flash save indicator
+    td.classList.add('just-saved');
+    setTimeout(() => td.classList.remove('just-saved'), 700);
+
+    // If port changed, refresh filter
+    if (colKey === 'port') refreshPortFilter();
+
+    // Re-render flag column for this row
+    if (colKey === 'arrival' || colKey === 'originalArrival') {
+      const tr = td.closest('tr');
+      const flagTd = tr.querySelector('[data-col="_flag"]');
+      if (flagTd) {
+        const flagCol = COLS.find(c => c.key === '_flag');
+        renderCell(flagTd, row, flagCol);
+      }
+      // Also re-render arrival display if originalArrival changed
+      if (colKey === 'originalArrival') {
+        const arrTd = tr.querySelector('[data-col="arrival"]');
+        if (arrTd && !arrTd.querySelector('.cell-input')) {
+          const arrCol = COLS.find(c => c.key === 'arrival');
+          renderCell(arrTd, row, arrCol);
+        }
+      }
+    }
+  } else {
+    // No change, just re-render
+  }
+}
+
+function cancelEdit() {
+  if (!activeCell) return;
+  const { rowId, colKey, td } = activeCell;
+  const row = vesselData.find(d => d.id === rowId);
+  activeCell = null;
+  if (row) {
+    const col = COLS.find(c => c.key === colKey);
+    renderCell(td, row, col);
+  }
+}
+
+function moveToNextRow(currentRowId, col) {
+  const filtered = getFilteredData();
+  const idx = filtered.findIndex(d => d.id === currentRowId);
+  if (idx < 0 || idx >= filtered.length - 1) return;
+  const nextRow = filtered[idx + 1];
+  setTimeout(() => {
+    const td = document.querySelector(`td[data-id="${nextRow.id}"][data-col="${col.key}"]`);
+    if (td) startEdit(td, nextRow.id, col);
+  }, 10);
+}
+
+function moveToNextCol(currentRowId, currentCol, backward) {
+  const editableCols = COLS.filter(c => c.type !== 'computed');
+  const idx = editableCols.findIndex(c => c.key === currentCol.key);
+  const nextIdx = backward ? idx - 1 : idx + 1;
+  if (nextIdx < 0 || nextIdx >= editableCols.length) return;
+  const nextCol = editableCols[nextIdx];
+  setTimeout(() => {
+    const td = document.querySelector(`td[data-id="${currentRowId}"][data-col="${nextCol.key}"]`);
+    if (td) startEdit(td, currentRowId, nextCol);
+  }, 10);
+}
+
+// ===== Render =====
+function renderCell(td, row, col) {
+  const html = cellDisplayHTML(row, col);
+  const isEmpty = !(row[col.key] || '') && col.type !== 'computed';
+  if (col.type === 'computed') {
+    td.innerHTML = `<div class="cell-display" style="cursor:default">${html}</div>`;
+  } else {
+    const hint = isEmpty ? (col.type === 'date' ? '—' : '—') : '';
+    td.innerHTML = `<div class="cell-display${isEmpty ? ' empty-hint' : ''}">${html || hint}</div>`;
+  }
+}
+
 let sortCol = null;
 let sortAsc = true;
 
-function render() {
+function getFilteredData() {
   const search = document.getElementById('searchBox').value.toLowerCase();
   const portVal = document.getElementById('portFilter').value;
   const delayedOnly = document.getElementById('showDelayedOnly').checked;
@@ -410,10 +506,17 @@ function render() {
       return 0;
     });
   }
+  return data;
+}
 
+function render() {
+  if (activeCell) commitEdit();
+
+  const data = getFilteredData();
   const tbody = document.getElementById('tableBody');
+
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">該当データなし</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">該当データなし — 「＋行追加」で追加</td></tr>';
     document.getElementById('summary').textContent = '';
     return;
   }
@@ -421,119 +524,85 @@ function render() {
   document.getElementById('summary').textContent = `${data.length}件表示 / 全${vesselData.length}件`;
 
   tbody.innerHTML = data.map(row => {
-    const delayed = isDelayed(row);
-    const arrivalChanged = row.arrival && row.originalArrival && row.arrival !== row.originalArrival;
-    return `<tr>
-      <td class="link-cell">${row.sourceUrl
-        ? `<a href="${row.sourceUrl}" target="_blank" rel="noopener">${row.source || '確認'}</a>`
-        : escHtml(row.source || '')}</td>
-      <td class="vessel-name">${escHtml(row.vessel)}</td>
-      <td>${escHtml(row.voy)}</td>
-      <td><span class="port ${portClass(row.port)}">${escHtml(row.port)}</span></td>
-      <td>${escHtml(row.origin||'')}</td>
-      <td class="date-cell">${formatDate(row.checkDate)}</td>
-      <td>${delayed
-        ? '<span class="flag-delayed">遅延</span>'
-        : (row.arrival ? '<span class="flag-ok">予定通り</span>' : '')}</td>
-      <td class="date-cell ${arrivalChanged ? 'date-changed' : ''}">${formatDate(row.arrival)}</td>
-      <td class="date-cell">${formatDate(row.originalArrival)}</td>
-      <td>${escHtml(row.delayReason||'')}</td>
-      <td class="date-cell">${formatDate(row.eta)}</td>
-      <td>${escHtml(row.si||'')}</td>
-      <td>${escHtml(row.inv||'')}</td>
-      <td class="remarks">${escHtml(row.remarks||'')}</td>
+    const cells = COLS.map(col => {
+      const html = cellDisplayHTML(row, col);
+      const val = row[col.key] || '';
+      const isEmpty = !val && col.type !== 'computed';
+      if (col.type === 'computed') {
+        return `<td data-id="${row.id}" data-col="${col.key}"><div class="cell-display" style="cursor:default">${html}</div></td>`;
+      }
+      const hint = isEmpty ? '—' : '';
+      return `<td data-id="${row.id}" data-col="${col.key}"><div class="cell-display${isEmpty ? ' empty-hint' : ''}">${html || hint}</div></td>`;
+    }).join('');
+
+    return `<tr data-row-id="${row.id}">
+      ${cells}
       <td class="actions">
-        <button class="btn btn-secondary btn-sm" onclick="editRecord(${row.id})">編集</button>
         <button class="btn btn-danger btn-sm" onclick="deleteRecord(${row.id})">削除</button>
       </td>
     </tr>`;
   }).join('');
-}
 
-function escHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// ===== Modal =====
-const fields = ['vessel','voy','port','origin','checkDate','arrival','originalArrival','eta','delayReason','source','sourceUrl','si','inv','remarks'];
-
-function openModal(data) {
-  editingId = data ? data.id : null;
-  document.getElementById('modalTitle').textContent = data ? '編集' : '新規追加';
-  document.getElementById('saveBtn').textContent = data ? '更新' : '追加';
-
-  fields.forEach(f => {
-    const el = document.getElementById('f_' + f);
-    if (!el) return;
-    if (el.tagName === 'TEXTAREA') {
-      el.value = data ? (data[f] || '') : '';
-    } else {
-      el.value = data ? (data[f] || '') : '';
-    }
+  // Attach click handlers
+  tbody.querySelectorAll('td[data-col]').forEach(td => {
+    const col = COLS.find(c => c.key === td.dataset.col);
+    if (!col || col.type === 'computed') return;
+    td.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A') return; // Don't intercept link clicks
+      startEdit(td, parseInt(td.dataset.id), col);
+    });
   });
-
-  // 新規時は確認日を今日にデフォルト
-  if (!data) {
-    const today = new Date().toISOString().slice(0, 10);
-    document.getElementById('f_checkDate').value = today;
-  }
-
-  document.getElementById('modalOverlay').classList.add('active');
-  document.getElementById('f_vessel').focus();
 }
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('active');
-  editingId = null;
-}
-
-function saveRecord() {
-  const vessel = document.getElementById('f_vessel').value.trim();
-  if (!vessel) {
-    alert('船名は必須です');
-    document.getElementById('f_vessel').focus();
-    return;
-  }
-
-  const record = {};
-  fields.forEach(f => {
-    const el = document.getElementById('f_' + f);
-    record[f] = el ? el.value.trim() : '';
+// ===== Add / Delete =====
+function addNewRow() {
+  const newRow = { id: nextId++ };
+  COLS.forEach(c => {
+    if (c.type !== 'computed') newRow[c.key] = '';
   });
-
-  if (editingId !== null) {
-    const idx = vesselData.findIndex(d => d.id === editingId);
-    if (idx >= 0) {
-      record.id = editingId;
-      vesselData[idx] = record;
-    }
-  } else {
-    record.id = nextId++;
-    vesselData.push(record);
-  }
-
-  saveData();
-  refreshPortFilter();
+  newRow.sourceUrl = '';
+  newRow.checkDate = new Date().toISOString().slice(0, 10);
+  vesselData.push(newRow);
+  saveDataStore();
   render();
-  closeModal();
-}
 
-function editRecord(id) {
-  const row = vesselData.find(d => d.id === id);
-  if (row) openModal(row);
+  // Focus the vessel name cell of the new row
+  setTimeout(() => {
+    const td = document.querySelector(`td[data-id="${newRow.id}"][data-col="vessel"]`);
+    if (td) {
+      td.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const col = COLS.find(c => c.key === 'vessel');
+      startEdit(td, newRow.id, col);
+    }
+  }, 50);
 }
 
 function deleteRecord(id) {
   const row = vesselData.find(d => d.id === id);
   if (!row) return;
-  if (!confirm(`「${row.vessel} ${row.voy}」を削除しますか？`)) return;
+  const name = row.vessel || '(未入力)';
+  if (!confirm(`「${name} ${row.voy || ''}」を削除しますか？`)) return;
   vesselData = vesselData.filter(d => d.id !== id);
-  saveData();
+  saveDataStore();
   refreshPortFilter();
   render();
 }
+
+// ===== Source URL edit (double-click on source cell) =====
+document.getElementById('tableBody').addEventListener('dblclick', (e) => {
+  const td = e.target.closest('td[data-col="source"]');
+  if (!td) return;
+  const rowId = parseInt(td.dataset.id);
+  const row = vesselData.find(d => d.id === rowId);
+  if (!row) return;
+  const url = prompt('確認先URLを入力:', row.sourceUrl || '');
+  if (url !== null) {
+    row.sourceUrl = url.trim();
+    saveDataStore();
+    const col = COLS.find(c => c.key === 'source');
+    renderCell(td, row, col);
+  }
+});
 
 // ===== Export / Import =====
 function exportData() {
@@ -557,7 +626,7 @@ function importData(event) {
       if (!confirm(`${imported.length}件のデータを取り込みます。現在のデータは上書きされます。よろしいですか？`)) return;
       vesselData = imported.map((d, i) => ({ ...d, id: d.id || i + 1 }));
       nextId = Math.max(...vesselData.map(d => d.id)) + 1;
-      saveData();
+      saveDataStore();
       refreshPortFilter();
       render();
     } catch {
@@ -575,20 +644,13 @@ document.querySelectorAll('thead th[data-col]').forEach(th => {
     if (sortCol === col) { sortAsc = !sortAsc; }
     else { sortCol = col; sortAsc = true; }
     document.querySelectorAll('thead th .sort-icon').forEach(s => s.textContent = '');
-    th.querySelector('.sort-icon').textContent = sortAsc ? '▲' : '▼';
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = sortAsc ? '▲' : '▼';
     render();
   });
 });
 
-// ===== Keyboard =====
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
-});
-document.getElementById('modalOverlay').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeModal();
-});
-
-// ===== Events =====
+// ===== Filter events =====
 document.getElementById('searchBox').addEventListener('input', render);
 document.getElementById('portFilter').addEventListener('change', render);
 document.getElementById('showDelayedOnly').addEventListener('change', render);
