@@ -309,6 +309,7 @@
     <thead>
       <tr>
         <th data-col="source">確認先<span class="sort-icon"></span></th>
+        <th data-col="resultUrl">結果URL<span class="sort-icon"></span></th>
         <th data-col="vessel">船名<span class="sort-icon"></span></th>
         <th data-col="voy">VOY<span class="sort-icon"></span></th>
         <th data-col="port">揚げ地<span class="sort-icon"></span></th>
@@ -371,6 +372,7 @@ const CARRIER_KEY = 'vesselCarriers';
 
 const COLS = [
   { key:'source',          label:'確認先',     type:'select' },
+  { key:'resultUrl',       label:'結果URL',    type:'url' },
   { key:'vessel',          label:'船名',       type:'text' },
   { key:'voy',             label:'VOY',        type:'text' },
   { key:'port',            label:'揚げ地',     type:'text' },
@@ -420,6 +422,7 @@ function loadData() {
     if (row.lastCheckedArrival === undefined) row.lastCheckedArrival = row.arrival || '';
     if (row.lastCheckedEta === undefined) row.lastCheckedEta = row.eta || '';
     if (row.arrivalChanged === undefined) row.arrivalChanged = false;
+    if (row.resultUrl === undefined) row.resultUrl = '';
   });
   nextId = vesselData.length > 0 ? Math.max(...vesselData.map(d => d.id || 0)) + 1 : 1;
 }
@@ -521,6 +524,16 @@ function cellDisplayHTML(row, col) {
     html += ` <span class="edit-url-btn" onclick="event.stopPropagation(); editSourceUrl(${row.id})" title="参照URLを設定/編集">✎</span>`;
     return html;
   }
+  if (col.type === 'url') {
+    let html = '';
+    if (val) {
+      let host = 'URL';
+      try { host = new URL(val).hostname.replace(/^www\./, ''); } catch {}
+      html += `<a href="${escHtml(val)}" target="_blank" rel="noopener" class="url-chip" title="${escHtml(val)}">🔗 ${escHtml(host)}</a>`;
+    }
+    html += ` <span class="edit-url-btn" onclick="event.stopPropagation(); editUrlField(${row.id}, '${col.key}', '${escHtml(col.label)}')" title="${escHtml(col.label)}を設定/編集">✎</span>`;
+    return html;
+  }
   if (col.type === 'date') {
     const formatted = formatDate(val);
     if (col.key === 'arrival' && row.arrivalChanged && val) {
@@ -536,6 +549,7 @@ function cellDisplayHTML(row, col) {
 
 function startEdit(td, rowId, col) {
   if (col.type === 'computed') return;
+  if (col.type === 'url') { editUrlField(rowId, col.key, col.label); return; } // URL列はプロンプト編集
   if (activeCell && activeCell.rowId === rowId && activeCell.colKey === col.key) return;
   if (activeCell) commitEdit();
 
@@ -722,7 +736,7 @@ function render() {
   const tbody = document.getElementById('tableBody');
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="15" class="empty-state">該当データなし — 「＋行追加」で追加</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" class="empty-state">該当データなし — 「＋行追加」で追加</td></tr>';
     document.getElementById('summary').textContent = '';
     return;
   }
@@ -849,6 +863,17 @@ function deleteRecord(id) {
   render();
 }
 
+// 任意のURL列の設定/編集
+function editUrlField(id, fieldKey, fieldLabel) {
+  const row = vesselData.find(d => d.id === id);
+  if (!row) return;
+  const url = prompt(`${fieldLabel}を入力（空欄で削除）:`, row[fieldKey] || '');
+  if (url === null) return;
+  row[fieldKey] = url.trim();
+  saveDataStore();
+  render();
+}
+
 // 参照URLの設定/編集（✎ ボタンおよびダブルクリックから呼ばれる）
 function editSourceUrl(id) {
   const row = vesselData.find(d => d.id === id);
@@ -907,6 +932,7 @@ function importData(event) {
         if (row.lastCheckedArrival === undefined) row.lastCheckedArrival = row.arrival || '';
         if (row.lastCheckedEta === undefined) row.lastCheckedEta = row.eta || '';
         if (row.arrivalChanged === undefined) row.arrivalChanged = false;
+        if (row.resultUrl === undefined) row.resultUrl = '';
       });
       nextId = Math.max(...vesselData.map(d => d.id)) + 1;
       if (newCarriers) {
