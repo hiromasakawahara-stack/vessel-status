@@ -141,6 +141,34 @@
     .date-alert { color: #c62828; font-weight: 700; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
     .link-cell a { color: #1976d2; text-decoration: none; font-size: 0.8rem; }
     .link-cell a:hover { text-decoration: underline; }
+    /* URL chip: コンパクト表示 */
+    .url-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #e3f2fd;
+      color: #1565c0;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.75rem;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .url-chip:hover { background: #1976d2; color: white; text-decoration: none; }
+    .edit-url-btn {
+      display: inline-block;
+      padding: 2px 6px;
+      margin-left: 4px;
+      cursor: pointer;
+      color: #999;
+      font-size: 0.85rem;
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+    .edit-url-btn:hover { color: #1976d2; background: #e3f2fd; }
+    .source-name { font-size: 0.85rem; color: #333; vertical-align: middle; }
     .remarks { color: #666; font-size: 0.8rem; }
     .actions { white-space: nowrap; padding: 0.4rem !important; }
     .actions .btn-sm { margin: 0 2px; }
@@ -479,7 +507,19 @@ function cellDisplayHTML(row, col) {
     return val ? `<span class="port ${portClass(val)}">${escHtml(val)}</span>` : '';
   }
   if (col.key === 'source') {
-    return escHtml(val);
+    const sourceIsUrl = /^https?:\/\//i.test(val);
+    const urlToShow = row.sourceUrl || (sourceIsUrl ? val : '');
+    const sourceText = sourceIsUrl ? '' : val;
+    let html = '';
+    if (sourceText) html += `<span class="source-name">${escHtml(sourceText)}</span>`;
+    if (urlToShow) {
+      let host = 'URL';
+      try { host = new URL(urlToShow).hostname.replace(/^www\./, ''); } catch {}
+      html += (html ? ' ' : '') + `<a href="${escHtml(urlToShow)}" target="_blank" rel="noopener" class="url-chip" title="${escHtml(urlToShow)}">🔗 ${escHtml(host)}</a>`;
+    }
+    // ✎ 編集ボタン（URLを差し替え可能）
+    html += ` <span class="edit-url-btn" onclick="event.stopPropagation(); editSourceUrl(${row.id})" title="参照URLを設定/編集">✎</span>`;
+    return html;
   }
   if (col.type === 'date') {
     const formatted = formatDate(val);
@@ -809,18 +849,29 @@ function deleteRecord(id) {
   render();
 }
 
+// 参照URLの設定/編集（✎ ボタンおよびダブルクリックから呼ばれる）
+function editSourceUrl(id) {
+  const row = vesselData.find(d => d.id === id);
+  if (!row) return;
+  // 現在のURL: sourceUrl優先、なければsourceがURLならそれ
+  const current = row.sourceUrl || (/^https?:\/\//i.test(row.source || '') ? row.source : '');
+  const url = prompt('参照URLを入力（空欄で削除）:\n※船社マスタのURLより優先されます', current);
+  if (url === null) return;
+  const trimmed = url.trim();
+  row.sourceUrl = trimmed;
+  // sourceフィールドがURLだった場合は空にする（船社名を改めて選べるように）
+  if (/^https?:\/\//i.test(row.source || '')) {
+    row.source = '';
+  }
+  saveDataStore();
+  render();
+}
+
 document.getElementById('tableBody').addEventListener('dblclick', (e) => {
   const td = e.target.closest('td[data-col="source"]');
   if (!td) return;
   const rowId = parseInt(td.dataset.id);
-  const row = vesselData.find(d => d.id === rowId);
-  if (!row) return;
-  const url = prompt('個別URL（船社マスタより優先）を入力（空欄なら船社マスタのURLを使用）:', row.sourceUrl || '');
-  if (url !== null) {
-    row.sourceUrl = url.trim();
-    saveDataStore();
-    render();
-  }
+  editSourceUrl(rowId);
 });
 
 function exportData() {
