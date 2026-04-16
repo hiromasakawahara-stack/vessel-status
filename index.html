@@ -46,12 +46,15 @@
       font-weight: 600;
       transition: background 0.2s;
     }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-primary { background: #1976d2; color: white; }
-    .btn-primary:hover { background: #1565c0; }
+    .btn-primary:hover:not(:disabled) { background: #1565c0; }
     .btn-secondary { background: #e0e0e0; color: #333; }
-    .btn-secondary:hover { background: #ccc; }
+    .btn-secondary:hover:not(:disabled) { background: #ccc; }
     .btn-danger { background: #e53935; color: white; }
-    .btn-danger:hover { background: #c62828; }
+    .btn-danger:hover:not(:disabled) { background: #c62828; }
+    .btn-success { background: #43a047; color: white; }
+    .btn-success:hover:not(:disabled) { background: #2e7d32; }
     .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
     .btn-group { margin-left: auto; display: flex; gap: 0.5rem; }
     .summary {
@@ -86,18 +89,18 @@
     }
     thead th:hover { background: #1a3a6e; }
     thead th .sort-icon { margin-left: 4px; font-size: 0.7rem; }
-    thead th:last-child { cursor: default; }
-    thead th:last-child:hover { background: #16213e; }
+    thead th.no-sort, thead th:last-child { cursor: default; }
+    thead th.no-sort:hover, thead th:last-child:hover { background: #16213e; }
     tbody tr { border-bottom: 1px solid #eee; }
     tbody tr:hover { background: #f5f8ff; }
     tbody tr.new-row { background: #e8f5e9; }
+    tbody tr.has-alert { background: #fff8e1 !important; }
     tbody td {
       padding: 0;
       vertical-align: top;
       position: relative;
       min-height: 32px;
     }
-    /* --- Editable cell --- */
     td .cell-display {
       padding: 0.5rem;
       min-height: 32px;
@@ -109,12 +112,8 @@
       background: #e3f2fd;
       outline: 1px solid #90caf9;
     }
-    td .cell-display.empty-hint {
-      color: #ccc;
-    }
-    td .cell-display.empty-hint:hover {
-      color: #aaa;
-    }
+    td .cell-display.empty-hint { color: #ccc; }
+    td .cell-display.empty-hint:hover { color: #aaa; }
     td .cell-input {
       width: 100%;
       padding: 0.4rem;
@@ -127,10 +126,8 @@
       min-height: 32px;
       box-sizing: border-box;
     }
-    td .cell-input:focus {
-      box-shadow: 0 0 0 2px rgba(25,118,210,0.3);
-    }
-    /* --- Special displays --- */
+    td .cell-input:focus { box-shadow: 0 0 0 2px rgba(25,118,210,0.3); }
+    select.cell-input { padding: 0.3rem; }
     .vessel-name { font-weight: 600; color: #0f3460; }
     .port { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
     .port-osaka { background: #e3f2fd; color: #1565c0; }
@@ -138,7 +135,10 @@
     .port-other { background: #f3e5f5; color: #6a1b9a; }
     .flag-delayed { background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
     .flag-ok { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+    .flag-alert { background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
     .date-changed { color: #e65100; font-weight: 600; }
+    .date-alert { color: #c62828; font-weight: 700; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
     .link-cell a { color: #1976d2; text-decoration: none; font-size: 0.8rem; }
     .link-cell a:hover { text-decoration: underline; }
     .remarks { color: #666; font-size: 0.8rem; }
@@ -146,13 +146,91 @@
     .actions .btn-sm { margin: 0 2px; }
     .empty-state { text-align: center; padding: 3rem; color: #999; }
     #importFile { display: none; }
-    /* --- Saved flash --- */
     @keyframes savedFlash {
       0% { background: #c8e6c9; }
       100% { background: transparent; }
     }
-    td.just-saved .cell-display {
-      animation: savedFlash 0.6s ease-out;
+    td.just-saved .cell-display { animation: savedFlash 0.6s ease-out; }
+    /* --- Modal --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 720px;
+      max-height: 85vh;
+      overflow: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 { font-size: 1.1rem; color: #0f3460; }
+    .modal-body { padding: 1.5rem; }
+    .modal-body table { font-size: 0.8rem; }
+    .modal-body table th { background: #f5f5f5; color: #333; padding: 0.5rem; }
+    .modal-body table td { padding: 0.3rem; }
+    .modal-body input[type="text"] {
+      width: 100%;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+    .url-template-help {
+      background: #f0f7ff;
+      border: 1px solid #bbdefb;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #0d47a1;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .url-template-help code {
+      background: white;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+    .alert-banner {
+      background: #ffebee;
+      border-left: 4px solid #c62828;
+      color: #b71c1c;
+      padding: 0.8rem 2rem;
+      font-size: 0.9rem;
+      display: none;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .alert-banner.show { display: flex; }
+    .alert-banner .close-btn {
+      margin-left: auto;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 1rem;
+      color: #b71c1c;
     }
     @media (max-width: 768px) {
       .header { padding: 0.8rem 1rem; }
@@ -170,12 +248,19 @@
   <div class="date" id="currentDate"></div>
 </div>
 
+<div class="alert-banner" id="alertBanner">
+  <span id="alertMessage"></span>
+  <button class="close-btn" onclick="closeAlertBanner()">✕</button>
+</div>
+
 <div class="controls">
   <input type="text" id="searchBox" placeholder="船名・揚げ地・備考で検索...">
   <select id="portFilter"><option value="">全揚げ地</option></select>
   <label><input type="checkbox" id="showDelayedOnly"> 遅延のみ</label>
+  <label><input type="checkbox" id="showAlertOnly"> 要確認のみ</label>
   <div class="btn-group">
     <button class="btn btn-primary" onclick="addNewRow()">＋ 行追加</button>
+    <button class="btn btn-secondary" onclick="openCarrierModal()">船社マスタ</button>
     <button class="btn btn-secondary" onclick="exportData()">JSON出力</button>
     <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">JSON取込</button>
     <input type="file" id="importFile" accept=".json" onchange="importData(event)">
@@ -194,7 +279,7 @@
         <th data-col="port">揚げ地<span class="sort-icon"></span></th>
         <th data-col="origin">積み地<span class="sort-icon"></span></th>
         <th data-col="checkDate">確認日<span class="sort-icon"></span></th>
-        <th>フラグ</th>
+        <th class="no-sort">フラグ</th>
         <th data-col="arrival">入港日<span class="sort-icon"></span></th>
         <th data-col="originalArrival">書類時入港日<span class="sort-icon"></span></th>
         <th data-col="delayReason">遅延理由<span class="sort-icon"></span></th>
@@ -202,17 +287,55 @@
         <th data-col="si">S/I<span class="sort-icon"></span></th>
         <th data-col="inv">INV<span class="sort-icon"></span></th>
         <th data-col="remarks">備考<span class="sort-icon"></span></th>
-        <th>操作</th>
+        <th class="no-sort">操作</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
   </table>
 </div>
 
+<!-- Carrier Master Modal -->
+<div class="modal-overlay" id="carrierModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🏢 船社マスタ（確認先URL管理）</h2>
+      <button class="btn btn-sm btn-secondary" onclick="closeCarrierModal()">閉じる</button>
+    </div>
+    <div class="modal-body">
+      <div class="url-template-help">
+        URLテンプレートには以下のプレースホルダが使えます：
+        <code>{vessel}</code> 船名、
+        <code>{voy}</code> VOY、
+        <code>{port}</code> 揚げ地、
+        <code>{origin}</code> 積み地<br>
+        例: <code>https://example.com/search?q={vessel}&amp;voy={voy}</code>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30%">船社名</th>
+            <th>URLテンプレート（または検索ページURL）</th>
+            <th style="width:80px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="carrierTableBody"></tbody>
+      </table>
+      <div style="margin-top:1rem;">
+        <button class="btn btn-sm btn-primary" onclick="addCarrier()">＋ 船社を追加</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-success" onclick="saveCarriersAndClose()">保存して閉じる</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY = 'vesselData';
+const CARRIER_KEY = 'vesselCarriers';
+
 const COLS = [
-  { key:'source',          label:'確認先',     type:'text' },
+  { key:'source',          label:'確認先',     type:'select' },
   { key:'vessel',          label:'船名',       type:'text' },
   { key:'voy',             label:'VOY',        type:'text' },
   { key:'port',            label:'揚げ地',     type:'text' },
@@ -228,17 +351,28 @@ const COLS = [
   { key:'remarks',         label:'備考',       type:'text' },
 ];
 
+const defaultCarriers = [
+  { name:'ONE Vessel Schedule',   urlTemplate:'https://ecomm.one-line.com/one-ecom/schedule/vessel-schedule' },
+  { name:'COSCO Vessel Schedule', urlTemplate:'https://elines.coscoshipping.com/ebusiness/sailingSchedule/searchBySchedule' },
+  { name:'TOYOSHINGO / WANHAI',   urlTemplate:'https://www.toyoshingo.com/wanhai/' },
+  { name:'TOYOSHINGO / HASCO',    urlTemplate:'https://www.toyoshingo.com/hasco/' },
+  { name:'TOYOSHINGO / SITC',     urlTemplate:'https://www.toyoshingo.com/sitc/' },
+  { name:'JINJIANG SHIPPING',     urlTemplate:'https://jinjiangshipping.jp/vmi/daily.php' },
+  { name:'WAN HAI',               urlTemplate:'https://www.wanhai.com/views/quick_eservice_login.xhtml' },
+];
+
 const defaultData = [
-  { id:1, source:"ONE Vessel Schedule", sourceUrl:"https://vessel-schedule-service.com/one/vessel-schedule?tab=2&voyage_detail_id=40652027", vessel:"SAMAL", voy:"2611N", port:"OSAKA", origin:"", checkDate:"2026-04-10", arrival:"2026-04-13", originalArrival:"2026-04-09", delayReason:"", eta:"", si:"", inv:"", remarks:"和信工業, オーシャントレンズ" },
-  { id:2, source:"COSCO Vessel Schedule", sourceUrl:"", vessel:"COSCO KIKU", voy:"220E", port:"OSAKA", origin:"", checkDate:"2026-04-06", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"" },
-  { id:3, source:"", sourceUrl:"", vessel:"JULIE", voy:"HG615A", port:"KOBE", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"" },
-  { id:4, source:"TOYOSHINGO / WANHAI", sourceUrl:"https://www.toyoshingo.com/wanhai/certificate.php?portcode=40&id=10177739", vessel:"WAN HAI 288", voy:"N106", port:"OSAKA", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"三景" },
-  { id:5, source:"JINJIANG SHIPPING", sourceUrl:"https://jinjiangshipping.jp/vmi/daily.php", vessel:"MILD SONATA", voy:"2615E", port:"OSAKA", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"" }
+  { id:1, source:"ONE Vessel Schedule", sourceUrl:"https://vessel-schedule-service.com/one/vessel-schedule?tab=2&voyage_detail_id=40652027", vessel:"SAMAL", voy:"2611N", port:"OSAKA", origin:"", checkDate:"2026-04-10", arrival:"2026-04-13", originalArrival:"2026-04-09", delayReason:"", eta:"", si:"", inv:"", remarks:"和信工業, オーシャントレンズ", lastCheckedArrival:"2026-04-13", lastCheckedEta:"", arrivalChanged:false },
+  { id:2, source:"COSCO Vessel Schedule", sourceUrl:"", vessel:"COSCO KIKU", voy:"220E", port:"OSAKA", origin:"", checkDate:"2026-04-06", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"", lastCheckedArrival:"", lastCheckedEta:"", arrivalChanged:false },
+  { id:3, source:"", sourceUrl:"", vessel:"JULIE", voy:"HG615A", port:"KOBE", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"", lastCheckedArrival:"", lastCheckedEta:"", arrivalChanged:false },
+  { id:4, source:"TOYOSHINGO / WANHAI", sourceUrl:"https://www.toyoshingo.com/wanhai/certificate.php?portcode=40&id=10177739", vessel:"WAN HAI 288", voy:"N106", port:"OSAKA", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"三景", lastCheckedArrival:"", lastCheckedEta:"", arrivalChanged:false },
+  { id:5, source:"JINJIANG SHIPPING", sourceUrl:"https://jinjiangshipping.jp/vmi/daily.php", vessel:"MILD SONATA", voy:"2615E", port:"OSAKA", origin:"", checkDate:"", arrival:"", originalArrival:"", delayReason:"", eta:"", si:"", inv:"", remarks:"", lastCheckedArrival:"", lastCheckedEta:"", arrivalChanged:false }
 ];
 
 let vesselData = [];
+let carriers = [];
 let nextId = 1;
-let activeCell = null; // { rowId, colKey }
+let activeCell = null;
 
 function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -247,14 +381,39 @@ function loadData() {
   } else {
     vesselData = [...defaultData];
   }
+  vesselData.forEach(row => {
+    if (row.lastCheckedArrival === undefined) row.lastCheckedArrival = row.arrival || '';
+    if (row.lastCheckedEta === undefined) row.lastCheckedEta = row.eta || '';
+    if (row.arrivalChanged === undefined) row.arrivalChanged = false;
+  });
   nextId = vesselData.length > 0 ? Math.max(...vesselData.map(d => d.id || 0)) + 1 : 1;
 }
+function saveDataStore() { localStorage.setItem(STORAGE_KEY, JSON.stringify(vesselData)); }
 
-function saveDataStore() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(vesselData));
+function loadCarriers() {
+  const saved = localStorage.getItem(CARRIER_KEY);
+  if (saved) {
+    try { carriers = JSON.parse(saved); } catch { carriers = [...defaultCarriers]; }
+  } else {
+    carriers = [...defaultCarriers];
+  }
+}
+function saveCarriers() { localStorage.setItem(CARRIER_KEY, JSON.stringify(carriers)); }
+
+function findCarrier(name) { return carriers.find(c => c.name === name); }
+
+function buildCheckUrl(row) {
+  if (row.sourceUrl) return row.sourceUrl;
+  const carrier = findCarrier(row.source);
+  if (!carrier || !carrier.urlTemplate) return '';
+  let url = carrier.urlTemplate;
+  url = url.replace(/\{vessel\}/g, encodeURIComponent(row.vessel || ''));
+  url = url.replace(/\{voy\}/g,    encodeURIComponent(row.voy || ''));
+  url = url.replace(/\{port\}/g,   encodeURIComponent(row.port || ''));
+  url = url.replace(/\{origin\}/g, encodeURIComponent(row.origin || ''));
+  return url;
 }
 
-// ===== Helpers =====
 document.getElementById('currentDate').textContent =
   new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
 
@@ -280,7 +439,7 @@ function isDelayed(row) {
 
 function escHtml(str) {
   const div = document.createElement('div');
-  div.textContent = str;
+  div.textContent = str == null ? '' : str;
   return div.innerHTML;
 }
 
@@ -297,10 +456,10 @@ function refreshPortFilter() {
   });
 }
 
-// ===== Cell display content =====
 function cellDisplayHTML(row, col) {
   const val = row[col.key] || '';
   if (col.key === '_flag') {
+    if (row.arrivalChanged) return '<span class="flag-alert">⚠ 入港日変更</span>';
     const delayed = isDelayed(row);
     if (delayed) return '<span class="flag-delayed">遅延</span>';
     if (row.arrival) return '<span class="flag-ok">予定通り</span>';
@@ -313,11 +472,13 @@ function cellDisplayHTML(row, col) {
     return val ? `<span class="port ${portClass(val)}">${escHtml(val)}</span>` : '';
   }
   if (col.key === 'source') {
-    if (row.sourceUrl) return `<a href="${escHtml(row.sourceUrl)}" target="_blank" rel="noopener">${escHtml(val || '確認')}</a>`;
     return escHtml(val);
   }
   if (col.type === 'date') {
     const formatted = formatDate(val);
+    if (col.key === 'arrival' && row.arrivalChanged && val) {
+      return `<span class="date-alert" title="前回確認時から変更あり">${formatted}</span>`;
+    }
     if (col.key === 'arrival' && row.arrival && row.originalArrival && row.arrival !== row.originalArrival) {
       return `<span class="date-changed">${formatted}</span>`;
     }
@@ -326,12 +487,9 @@ function cellDisplayHTML(row, col) {
   return escHtml(val);
 }
 
-// ===== Inline edit =====
 function startEdit(td, rowId, col) {
   if (col.type === 'computed') return;
   if (activeCell && activeCell.rowId === rowId && activeCell.colKey === col.key) return;
-
-  // Commit any other active edit first
   if (activeCell) commitEdit();
 
   const row = vesselData.find(d => d.id === rowId);
@@ -346,32 +504,31 @@ function startEdit(td, rowId, col) {
     input.type = 'date';
     input.className = 'cell-input';
     input.value = val;
+  } else if (col.type === 'select' && col.key === 'source') {
+    input = document.createElement('select');
+    input.className = 'cell-input';
+    input.innerHTML = '<option value="">（選択）</option>' +
+      carriers.map(c => `<option value="${escHtml(c.name)}"${c.name === val ? ' selected' : ''}>${escHtml(c.name)}</option>`).join('');
   } else {
     input = document.createElement('input');
     input.type = 'text';
     input.className = 'cell-input';
     input.value = val;
-    if (col.key === 'source') {
-      input.placeholder = '確認先名';
-    }
   }
 
   td.innerHTML = '';
   td.appendChild(input);
   input.focus();
-  if (input.type === 'text') input.select();
+  if (input.tagName === 'INPUT' && input.type === 'text') input.select();
 
   input.addEventListener('blur', () => commitEdit());
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       commitEdit();
-      // Move to next row, same column
       moveToNextRow(rowId, col);
     }
-    if (e.key === 'Escape') {
-      cancelEdit();
-    }
+    if (e.key === 'Escape') cancelEdit();
     if (e.key === 'Tab') {
       e.preventDefault();
       commitEdit();
@@ -389,34 +546,36 @@ function commitEdit() {
   const row = vesselData.find(d => d.id === rowId);
   if (!row) { activeCell = null; return; }
 
-  const newVal = input.value.trim();
+  const newVal = (input.value || '').trim();
   const oldVal = row[colKey] || '';
 
   row[colKey] = newVal;
   activeCell = null;
 
-  // Re-render just this cell
+  if (colKey === 'arrival' && newVal !== oldVal) {
+    if (row.lastCheckedArrival && newVal && row.lastCheckedArrival !== newVal) {
+      row.arrivalChanged = true;
+      showAlertBanner(`「${row.vessel || '(未入力)'} ${row.voy || ''}」の入港日が変更されました: ${formatDate(row.lastCheckedArrival)} → ${formatDate(newVal)}`);
+    }
+  }
+
   const col = COLS.find(c => c.key === colKey);
   renderCell(td, row, col);
 
   if (newVal !== oldVal) {
     saveDataStore();
-    // Flash save indicator
     td.classList.add('just-saved');
     setTimeout(() => td.classList.remove('just-saved'), 700);
 
-    // If port changed, refresh filter
     if (colKey === 'port') refreshPortFilter();
 
-    // Re-render flag column for this row
+    const tr = td.closest('tr');
     if (colKey === 'arrival' || colKey === 'originalArrival') {
-      const tr = td.closest('tr');
       const flagTd = tr.querySelector('[data-col="_flag"]');
       if (flagTd) {
         const flagCol = COLS.find(c => c.key === '_flag');
         renderCell(flagTd, row, flagCol);
       }
-      // Also re-render arrival display if originalArrival changed
       if (colKey === 'originalArrival') {
         const arrTd = tr.querySelector('[data-col="arrival"]');
         if (arrTd && !arrTd.querySelector('.cell-input')) {
@@ -424,9 +583,8 @@ function commitEdit() {
           renderCell(arrTd, row, arrCol);
         }
       }
+      if (row.arrivalChanged) tr.classList.add('has-alert');
     }
-  } else {
-    // No change, just re-render
   }
 }
 
@@ -464,14 +622,13 @@ function moveToNextCol(currentRowId, currentCol, backward) {
   }, 10);
 }
 
-// ===== Render =====
 function renderCell(td, row, col) {
   const html = cellDisplayHTML(row, col);
   const isEmpty = !(row[col.key] || '') && col.type !== 'computed';
   if (col.type === 'computed') {
     td.innerHTML = `<div class="cell-display" style="cursor:default">${html}</div>`;
   } else {
-    const hint = isEmpty ? (col.type === 'date' ? '—' : '—') : '';
+    const hint = isEmpty ? '—' : '';
     td.innerHTML = `<div class="cell-display${isEmpty ? ' empty-hint' : ''}">${html || hint}</div>`;
   }
 }
@@ -483,6 +640,7 @@ function getFilteredData() {
   const search = document.getElementById('searchBox').value.toLowerCase();
   const portVal = document.getElementById('portFilter').value;
   const delayedOnly = document.getElementById('showDelayedOnly').checked;
+  const alertOnly = document.getElementById('showAlertOnly').checked;
 
   let data = vesselData.filter(row => {
     if (search && !(
@@ -494,6 +652,7 @@ function getFilteredData() {
     )) return false;
     if (portVal && row.port !== portVal) return false;
     if (delayedOnly && !isDelayed(row)) return false;
+    if (alertOnly && !row.arrivalChanged) return false;
     return true;
   });
 
@@ -521,7 +680,9 @@ function render() {
     return;
   }
 
-  document.getElementById('summary').textContent = `${data.length}件表示 / 全${vesselData.length}件`;
+  const alertCount = vesselData.filter(r => r.arrivalChanged).length;
+  const summaryText = `${data.length}件表示 / 全${vesselData.length}件` + (alertCount > 0 ? ` ・ ⚠ ${alertCount}件が要確認` : '');
+  document.getElementById('summary').textContent = summaryText;
 
   tbody.innerHTML = data.map(row => {
     const cells = COLS.map(col => {
@@ -535,38 +696,58 @@ function render() {
       return `<td data-id="${row.id}" data-col="${col.key}"><div class="cell-display${isEmpty ? ' empty-hint' : ''}">${html || hint}</div></td>`;
     }).join('');
 
-    return `<tr data-row-id="${row.id}">
+    const rowCls = row.arrivalChanged ? 'has-alert' : '';
+    const canCheck = (row.source || row.sourceUrl) && (row.vessel || row.voy || row.port);
+    const disabledAttr = canCheck ? '' : 'disabled title="船社と船名/VOY/揚げ地のどれかを入力してください"';
+
+    return `<tr data-row-id="${row.id}" class="${rowCls}">
       ${cells}
       <td class="actions">
+        <button class="btn btn-primary btn-sm" onclick="checkSite(${row.id})" ${disabledAttr}>🔍 サイト確認</button>
         <button class="btn btn-danger btn-sm" onclick="deleteRecord(${row.id})">削除</button>
       </td>
     </tr>`;
   }).join('');
 
-  // Attach click handlers
   tbody.querySelectorAll('td[data-col]').forEach(td => {
     const col = COLS.find(c => c.key === td.dataset.col);
     if (!col || col.type === 'computed') return;
     td.addEventListener('click', (e) => {
-      if (e.target.tagName === 'A') return; // Don't intercept link clicks
+      if (e.target.tagName === 'A') return;
       startEdit(td, parseInt(td.dataset.id), col);
     });
   });
 }
 
-// ===== Add / Delete =====
+function checkSite(id) {
+  const row = vesselData.find(d => d.id === id);
+  if (!row) return;
+  const url = buildCheckUrl(row);
+  if (!url) {
+    alert('確認先URLが設定されていません。\n\n「船社マスタ」でURLテンプレートを登録するか、\n確認先セルをダブルクリックして個別URLを設定してください。');
+    return;
+  }
+  row.checkDate = new Date().toISOString().slice(0, 10);
+  row.lastCheckedArrival = row.arrival || '';
+  row.lastCheckedEta = row.eta || '';
+  row.arrivalChanged = false;
+  saveDataStore();
+  render();
+  window.open(url, '_blank', 'noopener');
+}
+
 function addNewRow() {
   const newRow = { id: nextId++ };
-  COLS.forEach(c => {
-    if (c.type !== 'computed') newRow[c.key] = '';
-  });
+  COLS.forEach(c => { if (c.type !== 'computed') newRow[c.key] = ''; });
   newRow.sourceUrl = '';
   newRow.checkDate = new Date().toISOString().slice(0, 10);
+  newRow.lastCheckedArrival = '';
+  newRow.lastCheckedEta = '';
+  newRow.arrivalChanged = false;
   vesselData.push(newRow);
   saveDataStore();
   render();
 
-  // Focus the vessel name cell of the new row
   setTimeout(() => {
     const td = document.querySelector(`td[data-id="${newRow.id}"][data-col="vessel"]`);
     if (td) {
@@ -588,25 +769,23 @@ function deleteRecord(id) {
   render();
 }
 
-// ===== Source URL edit (double-click on source cell) =====
 document.getElementById('tableBody').addEventListener('dblclick', (e) => {
   const td = e.target.closest('td[data-col="source"]');
   if (!td) return;
   const rowId = parseInt(td.dataset.id);
   const row = vesselData.find(d => d.id === rowId);
   if (!row) return;
-  const url = prompt('確認先URLを入力:', row.sourceUrl || '');
+  const url = prompt('個別URL（船社マスタより優先）を入力（空欄なら船社マスタのURLを使用）:', row.sourceUrl || '');
   if (url !== null) {
     row.sourceUrl = url.trim();
     saveDataStore();
-    const col = COLS.find(c => c.key === 'source');
-    renderCell(td, row, col);
+    render();
   }
 });
 
-// ===== Export / Import =====
 function exportData() {
-  const blob = new Blob([JSON.stringify(vesselData, null, 2)], { type: 'application/json' });
+  const payload = { carriers, vessels: vesselData };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -622,10 +801,27 @@ function importData(event) {
   reader.onload = (e) => {
     try {
       const imported = JSON.parse(e.target.result);
-      if (!Array.isArray(imported)) throw new Error('invalid');
-      if (!confirm(`${imported.length}件のデータを取り込みます。現在のデータは上書きされます。よろしいですか？`)) return;
-      vesselData = imported.map((d, i) => ({ ...d, id: d.id || i + 1 }));
+      let vessels, newCarriers;
+      if (Array.isArray(imported)) {
+        vessels = imported;
+      } else if (imported && Array.isArray(imported.vessels)) {
+        vessels = imported.vessels;
+        if (Array.isArray(imported.carriers)) newCarriers = imported.carriers;
+      } else {
+        throw new Error('invalid');
+      }
+      if (!confirm(`${vessels.length}件のデータを取り込みます。現在のデータは上書きされます。よろしいですか？`)) return;
+      vesselData = vessels.map((d, i) => ({ ...d, id: d.id || i + 1 }));
+      vesselData.forEach(row => {
+        if (row.lastCheckedArrival === undefined) row.lastCheckedArrival = row.arrival || '';
+        if (row.lastCheckedEta === undefined) row.lastCheckedEta = row.eta || '';
+        if (row.arrivalChanged === undefined) row.arrivalChanged = false;
+      });
       nextId = Math.max(...vesselData.map(d => d.id)) + 1;
+      if (newCarriers) {
+        carriers = newCarriers;
+        saveCarriers();
+      }
       saveDataStore();
       refreshPortFilter();
       render();
@@ -637,7 +833,54 @@ function importData(event) {
   event.target.value = '';
 }
 
-// ===== Sort =====
+function openCarrierModal() {
+  renderCarrierTable();
+  document.getElementById('carrierModal').classList.add('open');
+}
+function closeCarrierModal() {
+  document.getElementById('carrierModal').classList.remove('open');
+}
+function renderCarrierTable() {
+  const tbody = document.getElementById('carrierTableBody');
+  tbody.innerHTML = carriers.map((c, i) => `
+    <tr>
+      <td><input type="text" value="${escHtml(c.name)}" data-idx="${i}" data-field="name"></td>
+      <td><input type="text" value="${escHtml(c.urlTemplate || '')}" data-idx="${i}" data-field="urlTemplate" placeholder="https://... {vessel}/{voy}/{port}"></td>
+      <td><button class="btn btn-sm btn-danger" onclick="removeCarrier(${i})">削除</button></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      const field = e.target.dataset.field;
+      carriers[idx][field] = e.target.value;
+    });
+  });
+}
+function addCarrier() {
+  carriers.push({ name:'新規船社', urlTemplate:'' });
+  renderCarrierTable();
+}
+function removeCarrier(idx) {
+  if (!confirm(`「${carriers[idx].name}」を削除しますか？`)) return;
+  carriers.splice(idx, 1);
+  renderCarrierTable();
+}
+function saveCarriersAndClose() {
+  carriers = carriers.filter(c => (c.name || '').trim());
+  saveCarriers();
+  closeCarrierModal();
+  render();
+}
+
+function showAlertBanner(msg) {
+  document.getElementById('alertMessage').textContent = '⚠ ' + msg;
+  document.getElementById('alertBanner').classList.add('show');
+}
+function closeAlertBanner() {
+  document.getElementById('alertBanner').classList.remove('show');
+}
+
 document.querySelectorAll('thead th[data-col]').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.dataset.col;
@@ -650,12 +893,12 @@ document.querySelectorAll('thead th[data-col]').forEach(th => {
   });
 });
 
-// ===== Filter events =====
 document.getElementById('searchBox').addEventListener('input', render);
 document.getElementById('portFilter').addEventListener('change', render);
 document.getElementById('showDelayedOnly').addEventListener('change', render);
+document.getElementById('showAlertOnly').addEventListener('change', render);
 
-// ===== Init =====
+loadCarriers();
 loadData();
 refreshPortFilter();
 render();
