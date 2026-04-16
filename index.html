@@ -403,6 +403,22 @@
   </div>
 </div>
 
+<!-- Tavily 自動確認モーダル -->
+<div class="modal-overlay" id="tavilyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🤖 自動確認結果（Tavily）</h2>
+      <button class="btn btn-sm btn-secondary" onclick="closeTavilyModal()">閉じる</button>
+    </div>
+    <div class="modal-body" id="tavilyModalBody">
+      <p>検索中…</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTavilyModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY = 'vesselData';
 const CARRIER_KEY = 'vesselCarriers';
@@ -802,8 +818,9 @@ function render() {
     return `<tr data-row-id="${row.id}" class="${rowCls}">
       ${cells}
       <td class="actions">
-        <button class="btn btn-primary btn-sm" onclick="checkSite(${row.id})" ${disabledAttr}>🔍 サイト確認</button>
-        <button class="btn btn-secondary btn-sm" onclick="webSearch(${row.id})" ${webSearchDisabled}>🌐 Web検索</button>
+        <button class="btn btn-primary btn-sm" onclick="checkSite(${row.id})" ${disabledAttr}>🔍 サイト</button>
+        <button class="btn btn-secondary btn-sm" onclick="webSearch(${row.id})" ${webSearchDisabled}>🌐 検索</button>
+        <button class="btn btn-success btn-sm" onclick="autoCheck(${row.id})" ${webSearchDisabled}>🤖 自動</button>
         <button class="btn btn-danger btn-sm" onclick="deleteRecord(${row.id})">削除</button>
       </td>
     </tr>`;
@@ -903,6 +920,76 @@ function checkSite(id) {
   saveDataStore();
   render();
   window.open(url, '_blank', 'noopener');
+}
+
+// ===== Tavily 自動確認 =====
+function escModalHtml(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+function openTavilyModal() { document.getElementById('tavilyModal').classList.add('open'); }
+function closeTavilyModal() { document.getElementById('tavilyModal').classList.remove('open'); }
+
+async function autoCheck(id) {
+  const row = vesselData.find(d => d.id === id);
+  if (!row) return;
+  if (!(row.vessel || row.voy || row.port)) {
+    alert('船名・VOY・揚げ地のいずれかを入力してください');
+    return;
+  }
+
+  const body = document.getElementById('tavilyModalBody');
+  body.innerHTML = `<p>🔍 <b>${escModalHtml(row.vessel)} ${escModalHtml(row.voy)}</b> を Tavily で検索中…</p>`;
+  openTavilyModal();
+
+  try {
+    const resp = await fetch('/api/check-vessel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vessel: row.vessel || '',
+        voy:    row.voy || '',
+        port:   row.port || '',
+        origin: row.origin || '',
+        source: row.source || '',
+      }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      body.innerHTML = `<p style="color:#c62828;">❌ エラー: ${escModalHtml(data.error || resp.statusText)}</p>${data.hint ? `<p style="color:#666;font-size:0.85rem;">${escModalHtml(data.hint)}</p>` : ''}`;
+      return;
+    }
+
+    // 確認日を更新
+    row.checkDate = new Date().toISOString().slice(0, 10);
+    saveDataStore();
+    render();
+
+    const answerHtml = data.answer
+      ? `<div style="background:#f0f7ff;border:1px solid #bbdefb;padding:0.8rem;border-radius:6px;margin-bottom:1rem;"><b>📝 要約:</b><br>${escModalHtml(data.answer)}</div>`
+      : '';
+
+    const datesHtml = (data.dateCandidates && data.dateCandidates.length)
+      ? `<div style="margin-bottom:1rem;"><b>📅 検出された日付候補:</b> ${data.dateCandidates.map(d => `<span style="background:#fff3e0;padding:2px 8px;border-radius:4px;margin:0 4px;">${escModalHtml(d)}</span>`).join('')}</div>`
+      : '';
+
+    const resultsHtml = (data.results || []).map(r => `
+      <div style="border:1px solid #e0e0e0;border-radius:6px;padding:0.7rem;margin-bottom:0.6rem;">
+        <div style="font-weight:600;margin-bottom:0.3rem;"><a href="${escModalHtml(r.url)}" target="_blank" rel="noopener">${escModalHtml(r.title)}</a></div>
+        <div style="font-size:0.78rem;color:#666;margin-bottom:0.4rem;">${escModalHtml(r.url)}</div>
+        <div style="font-size:0.85rem;line-height:1.5;">${escModalHtml(r.content)}</div>
+      </div>
+    `).join('');
+
+    body.innerHTML = `
+      <div style="font-size:0.8rem;color:#888;margin-bottom:0.5rem;">クエリ: <code>${escModalHtml(data.query)}</code></div>
+      ${answerHtml}
+      ${datesHtml}
+      <h3 style="font-size:0.95rem;margin:0.8rem 0 0.5rem;">🔗 検索結果（${(data.results || []).length}件）</h3>
+      ${resultsHtml || '<p>該当なし</p>'}
+    `;
+  } catch (err) {
+    body.innerHTML = `<p style="color:#c62828;">❌ 通信エラー: ${escModalHtml(err.message || String(err))}</p>`;
+  }
 }
 
 function addNewRow() {
