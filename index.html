@@ -63,8 +63,8 @@
       color: #666;
     }
     .table-wrapper {
-      padding: 0 2rem 2rem;
-      overflow-x: auto;
+      padding: 0 1rem 2rem;
+      overflow-x: hidden;
     }
     table {
       width: 100%;
@@ -73,19 +73,23 @@
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      font-size: 0.85rem;
+      font-size: 0.78rem;
+      table-layout: fixed;
     }
     thead th {
       background: #16213e;
       color: white;
-      padding: 0.7rem 0.5rem;
+      padding: 0.5rem 0.3rem;
       text-align: left;
       position: sticky;
       top: 0;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: break-word;
       cursor: pointer;
       user-select: none;
       z-index: 10;
+      font-size: 0.72rem;
+      line-height: 1.25;
     }
     thead th:hover { background: #1a3a6e; }
     thead th .sort-icon { margin-left: 4px; font-size: 0.7rem; }
@@ -102,11 +106,20 @@
       min-height: 32px;
     }
     td .cell-display {
-      padding: 0.5rem;
-      min-height: 32px;
+      padding: 0.35rem 0.3rem;
+      min-height: 30px;
       cursor: text;
       width: 100%;
       display: block;
+      word-break: break-word;
+      white-space: normal;
+    }
+    /* 揚げ地 ⇔ 積み地 D&Dスワップ */
+    td.swap-target { cursor: grab; }
+    td.swap-target.dragging { opacity: 0.4; }
+    td.swap-target.drag-over .cell-display {
+      background: #fff59d !important;
+      outline: 2px dashed #f57f17;
     }
     td .cell-display:hover {
       background: #e3f2fd;
@@ -260,12 +273,22 @@
       font-size: 1rem;
       color: #b71c1c;
     }
+    @media (max-width: 1200px) {
+      table { font-size: 0.72rem; }
+      thead th { font-size: 0.68rem; padding: 0.4rem 0.2rem; }
+      td .cell-display { padding: 0.3rem 0.2rem; font-size: 0.72rem; }
+      .url-chip { max-width: 90px; font-size: 0.68rem; }
+    }
     @media (max-width: 768px) {
       .header { padding: 0.8rem 1rem; }
       .controls { padding: 0.5rem 1rem; }
-      .table-wrapper { padding: 0 0.5rem 1rem; }
+      .table-wrapper { padding: 0 0.3rem 1rem; }
       .controls input[type="text"] { width: 100%; }
       .btn-group { margin-left: 0; width: 100%; justify-content: flex-end; }
+      table { font-size: 0.65rem; }
+      thead th { font-size: 0.6rem; }
+      td .cell-display { font-size: 0.65rem; padding: 0.25rem 0.15rem; }
+      .url-chip { max-width: 60px; font-size: 0.6rem; }
     }
   </style>
 </head>
@@ -306,6 +329,22 @@
 
 <div class="table-wrapper">
   <table>
+    <colgroup>
+      <col style="width:7%"><!-- 確認先 -->
+      <col style="width:7%"><!-- 結果URL -->
+      <col style="width:9%"><!-- 船名 -->
+      <col style="width:5%"><!-- VOY -->
+      <col style="width:6%"><!-- 揚げ地 -->
+      <col style="width:6%"><!-- 積み地 -->
+      <col style="width:5%"><!-- 確認日 -->
+      <col style="width:5%"><!-- フラグ -->
+      <col style="width:5%"><!-- 入港日 -->
+      <col style="width:7%"><!-- 書類入手時入港日 -->
+      <col style="width:10%"><!-- 遅延理由 -->
+      <col style="width:6%"><!-- S/I&I/I -->
+      <col style="width:14%"><!-- 備考 -->
+      <col style="width:8%"><!-- 操作 -->
+    </colgroup>
     <thead>
       <tr>
         <th data-col="source">確認先<span class="sort-icon"></span></th>
@@ -317,11 +356,9 @@
         <th data-col="checkDate">確認日<span class="sort-icon"></span></th>
         <th class="no-sort">フラグ</th>
         <th data-col="arrival">入港日<span class="sort-icon"></span></th>
-        <th data-col="originalArrival">書類時入港日<span class="sort-icon"></span></th>
+        <th data-col="originalArrival">書類入手時<br>入港日<span class="sort-icon"></span></th>
         <th data-col="delayReason">遅延理由<span class="sort-icon"></span></th>
-        <th data-col="eta">ETA<span class="sort-icon"></span></th>
-        <th data-col="si">S/I<span class="sort-icon"></span></th>
-        <th data-col="inv">INV<span class="sort-icon"></span></th>
+        <th data-col="si">S/I&amp;I/I<span class="sort-icon"></span></th>
         <th data-col="remarks">備考<span class="sort-icon"></span></th>
         <th class="no-sort">操作</th>
       </tr>
@@ -371,21 +408,19 @@ const STORAGE_KEY = 'vesselData';
 const CARRIER_KEY = 'vesselCarriers';
 
 const COLS = [
-  { key:'source',          label:'確認先',     type:'select' },
-  { key:'resultUrl',       label:'結果URL',    type:'url' },
-  { key:'vessel',          label:'船名',       type:'text' },
-  { key:'voy',             label:'VOY',        type:'text' },
-  { key:'port',            label:'揚げ地',     type:'text' },
-  { key:'origin',          label:'積み地',     type:'text' },
-  { key:'checkDate',       label:'確認日',     type:'date' },
-  { key:'_flag',           label:'フラグ',     type:'computed' },
-  { key:'arrival',         label:'入港日',     type:'date' },
-  { key:'originalArrival', label:'書類時入港日', type:'date' },
-  { key:'delayReason',     label:'遅延理由',   type:'text' },
-  { key:'eta',             label:'ETA',        type:'date' },
-  { key:'si',              label:'S/I',        type:'text' },
-  { key:'inv',             label:'INV',        type:'text' },
-  { key:'remarks',         label:'備考',       type:'text' },
+  { key:'source',          label:'確認先',         type:'select' },
+  { key:'resultUrl',       label:'結果URL',        type:'url' },
+  { key:'vessel',          label:'船名',           type:'text' },
+  { key:'voy',             label:'VOY',            type:'text' },
+  { key:'port',            label:'揚げ地',         type:'text' },
+  { key:'origin',          label:'積み地',         type:'text' },
+  { key:'checkDate',       label:'確認日',         type:'date' },
+  { key:'_flag',           label:'フラグ',         type:'computed' },
+  { key:'arrival',         label:'入港日',         type:'date' },
+  { key:'originalArrival', label:'書類入手時入港日', type:'date' },
+  { key:'delayReason',     label:'遅延理由',       type:'text' },
+  { key:'si',              label:'S/I&I/I',        type:'text' },
+  { key:'remarks',         label:'備考',           type:'text' },
 ];
 
 const defaultCarriers = [
@@ -736,7 +771,7 @@ function render() {
   const tbody = document.getElementById('tableBody');
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="16" class="empty-state">該当データなし — 「＋行追加」で追加</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">該当データなし — 「＋行追加」で追加</td></tr>';
     document.getElementById('summary').textContent = '';
     return;
   }
@@ -780,6 +815,46 @@ function render() {
     td.addEventListener('click', (e) => {
       if (e.target.tagName === 'A') return;
       startEdit(td, parseInt(td.dataset.id), col);
+    });
+  });
+
+  // 揚げ地 ⇔ 積み地 ドラッグ＆ドロップで入れ替え（同じ行内のみ）
+  tbody.querySelectorAll('td[data-col="port"], td[data-col="origin"]').forEach(td => {
+    td.classList.add('swap-target');
+    td.setAttribute('draggable', 'true');
+    td.addEventListener('dragstart', (e) => {
+      if (activeCell) { e.preventDefault(); return; }
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        rowId: parseInt(td.dataset.id),
+        colKey: td.dataset.col
+      }));
+      e.dataTransfer.effectAllowed = 'move';
+      td.classList.add('dragging');
+    });
+    td.addEventListener('dragend', () => td.classList.remove('dragging'));
+    td.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      td.classList.add('drag-over');
+    });
+    td.addEventListener('dragleave', () => td.classList.remove('drag-over'));
+    td.addEventListener('drop', (e) => {
+      e.preventDefault();
+      td.classList.remove('drag-over');
+      let payload;
+      try { payload = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
+      const targetRowId = parseInt(td.dataset.id);
+      const targetCol = td.dataset.col;
+      if (payload.rowId !== targetRowId) return;       // 同じ行のみ
+      if (payload.colKey === targetCol) return;        // 同じ列なら何もしない
+      const row = vesselData.find(d => d.id === targetRowId);
+      if (!row) return;
+      const tmp = row.port;
+      row.port = row.origin;
+      row.origin = tmp;
+      saveDataStore();
+      refreshPortFilter();
+      render();
     });
   });
 }
@@ -838,7 +913,10 @@ function addNewRow() {
   newRow.lastCheckedArrival = '';
   newRow.lastCheckedEta = '';
   newRow.arrivalChanged = false;
-  vesselData.push(newRow);
+  vesselData.unshift(newRow);  // 先頭に追加
+  // 新規行を必ず先頭に見せるため、現在のソートを解除
+  sortCol = null;
+  document.querySelectorAll('thead th .sort-icon').forEach(s => s.textContent = '');
   saveDataStore();
   render();
 
