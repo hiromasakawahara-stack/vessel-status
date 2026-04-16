@@ -258,6 +258,13 @@
   <select id="portFilter"><option value="">全揚げ地</option></select>
   <label><input type="checkbox" id="showDelayedOnly"> 遅延のみ</label>
   <label><input type="checkbox" id="showAlertOnly"> 要確認のみ</label>
+  <label style="margin-left:0.5rem;">検索:
+    <select id="searchEngine" style="margin-left:4px;">
+      <option value="google">Google</option>
+      <option value="bing">Bing (Edge)</option>
+      <option value="yahoo">Yahoo! Japan</option>
+    </select>
+  </label>
   <div class="btn-group">
     <button class="btn btn-primary" onclick="addNewRow()">＋ 行追加</button>
     <button class="btn btn-secondary" onclick="openCarrierModal()">船社マスタ</button>
@@ -700,10 +707,14 @@ function render() {
     const canCheck = (row.source || row.sourceUrl) && (row.vessel || row.voy || row.port);
     const disabledAttr = canCheck ? '' : 'disabled title="船社と船名/VOY/揚げ地のどれかを入力してください"';
 
+    const canWebSearch = row.vessel || row.voy || row.port;
+    const webSearchDisabled = canWebSearch ? '' : 'disabled title="船名/VOY/揚げ地のどれかを入力"';
+
     return `<tr data-row-id="${row.id}" class="${rowCls}">
       ${cells}
       <td class="actions">
         <button class="btn btn-primary btn-sm" onclick="checkSite(${row.id})" ${disabledAttr}>🔍 サイト確認</button>
+        <button class="btn btn-secondary btn-sm" onclick="webSearch(${row.id})" ${webSearchDisabled}>🌐 Web検索</button>
         <button class="btn btn-danger btn-sm" onclick="deleteRecord(${row.id})">削除</button>
       </td>
     </tr>`;
@@ -717,6 +728,35 @@ function render() {
       startEdit(td, parseInt(td.dataset.id), col);
     });
   });
+}
+
+// 船名+VOY+揚げ地でWeb検索（Google/Bing/Yahoo切替可）
+function webSearch(id) {
+  const row = vesselData.find(d => d.id === id);
+  if (!row) return;
+  const parts = [];
+  if (row.vessel) parts.push(`"${row.vessel}"`);
+  if (row.voy)    parts.push(row.voy);
+  if (row.port)   parts.push(row.port);
+  const q = parts.join(' ');
+  if (!q) {
+    alert('船名・VOY・揚げ地のいずれかを入力してください');
+    return;
+  }
+  const engine = localStorage.getItem('vesselSearchEngine') || 'google';
+  let url;
+  if (engine === 'bing') {
+    url = 'https://www.bing.com/search?q=' + encodeURIComponent(q);
+  } else if (engine === 'yahoo') {
+    url = 'https://search.yahoo.co.jp/search?p=' + encodeURIComponent(q);
+  } else {
+    url = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+  }
+  // 確認日を更新
+  row.checkDate = new Date().toISOString().slice(0, 10);
+  saveDataStore();
+  render();
+  window.open(url, '_blank', 'noopener');
 }
 
 function checkSite(id) {
@@ -897,6 +937,13 @@ document.getElementById('searchBox').addEventListener('input', render);
 document.getElementById('portFilter').addEventListener('change', render);
 document.getElementById('showDelayedOnly').addEventListener('change', render);
 document.getElementById('showAlertOnly').addEventListener('change', render);
+
+// 検索エンジンの選択を永続化
+const searchEngineEl = document.getElementById('searchEngine');
+searchEngineEl.value = localStorage.getItem('vesselSearchEngine') || 'google';
+searchEngineEl.addEventListener('change', (e) => {
+  localStorage.setItem('vesselSearchEngine', e.target.value);
+});
 
 loadCarriers();
 loadData();
