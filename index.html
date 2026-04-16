@@ -183,8 +183,13 @@
     .edit-url-btn:hover { color: #1976d2; background: #e3f2fd; }
     .source-name { font-size: 0.85rem; color: #333; vertical-align: middle; }
     .remarks { color: #666; font-size: 0.8rem; }
-    .actions { white-space: nowrap; padding: 0.4rem !important; }
-    .actions .btn-sm { margin: 0 2px; }
+    .actions {
+      padding: 0.3rem !important;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+    .actions .btn-sm { margin: 0; padding: 3px 6px; font-size: 0.68rem; white-space: nowrap; }
     .empty-state { text-align: center; padding: 3rem; color: #999; }
     #importFile { display: none; }
     @keyframes savedFlash {
@@ -330,20 +335,20 @@
 <div class="table-wrapper">
   <table>
     <colgroup>
-      <col style="width:7%"><!-- 確認先 -->
-      <col style="width:7%"><!-- 結果URL -->
-      <col style="width:9%"><!-- 船名 -->
-      <col style="width:5%"><!-- VOY -->
-      <col style="width:6%"><!-- 揚げ地 -->
-      <col style="width:6%"><!-- 積み地 -->
+      <col style="width:6%"><!-- 確認先 -->
+      <col style="width:5%"><!-- 結果URL -->
+      <col style="width:8%"><!-- 船名 -->
+      <col style="width:4%"><!-- VOY -->
+      <col style="width:5%"><!-- 揚げ地 -->
+      <col style="width:5%"><!-- 積み地 -->
       <col style="width:5%"><!-- 確認日 -->
-      <col style="width:5%"><!-- フラグ -->
+      <col style="width:4%"><!-- フラグ -->
       <col style="width:5%"><!-- 入港日 -->
       <col style="width:7%"><!-- 書類入手時入港日 -->
-      <col style="width:10%"><!-- 遅延理由 -->
-      <col style="width:6%"><!-- S/I&I/I -->
-      <col style="width:14%"><!-- 備考 -->
-      <col style="width:8%"><!-- 操作 -->
+      <col style="width:8%"><!-- 遅延理由 -->
+      <col style="width:5%"><!-- S/I&I/I -->
+      <col style="width:12%"><!-- 備考 -->
+      <col style="width:21%"><!-- 操作（4ボタンを2行に） -->
     </colgroup>
     <thead>
       <tr>
